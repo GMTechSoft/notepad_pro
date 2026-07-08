@@ -1,0 +1,15 @@
+pubspec.yaml
+lib/services/pdf_service.dart
+lib/presentation/screens/note_reader/read_note_screen.dart
+lib/app.dart
+lib/core/routes/app_router.dart
+lib/core/utils/text_direction_utils.dart
+lib/domain/entities/vault_file.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\note_reader\read_note_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\services\pdf_service.dart
+lib/presentation/screens/note_reader/pdf_preview_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\core\routes\app_router.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\note_reader\pdf_preview_screen.dart
+lib/presentation/screens/create_file/create_file_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\create_file\create_file_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\pubspec.yaml

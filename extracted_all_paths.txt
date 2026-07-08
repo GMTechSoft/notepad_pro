@@ -1,0 +1,31 @@
+pubspec.yaml
+lib/presentation/screens/pdf_preview_screen.dart
+lib/presentation/screens/create_file/create_file_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\pdf_preview_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\create_file\create_file_screen.dart
+lib/core/routes/app_router.dart
+lib/presentation/screens/note_reader/read_note_screen.dart
+lib/presentation/screens/editor/note_editor_screen.dart
+lib/presentation/screens/home/home_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\note_reader\read_note_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\core\routes\app_router.dart
+lib/domain/entities/vault_file.dart
+lib/services/pdf_service.dart
+lib/presentation/widgets/cards/file_card.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\services\pdf_service.dart
+lib/data/repositories/vault_repository_impl.dart
+lib/services/hive_service.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\blocs\files\files_cubit.dart
+lib/services/google_drive_sync_service.dart
+lib/data/models/vault_file_model.dart
+lib/presentation/blocs/sync/sync_cubit.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\data\repositories\vault_repository_impl.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\services\google_drive_sync_service.dart
+lib/presentation/screens/folder_detail/folder_detail_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\folder_detail\folder_detail_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\home\home_screen.dart
+lib/app.dart
+lib/core/utils/text_direction_utils.dart
+lib/presentation/screens/note_reader/pdf_preview_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\lib\presentation\screens\note_reader\pdf_preview_screen.dart
+E:\My Data\Flutter_Projects\my_notes_app\pubspec.yaml

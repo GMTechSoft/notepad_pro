@@ -1,0 +1,99 @@
+name: notepad_pro
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0 # Added explicitly
+  flutter_colorpicker: ^1.1.0 # Added for custom color selection
+  
+  # Authentication & Cloud
+  google_sign_in: ^6.2.1
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
+  
+  # Core
+  cupertino_icons: ^1.0.6
+  
+  # Hive for Offline Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.2 # Added explicitly
+  
+  # Network Connectivity
+  connectivity_plus: ^7.0.0 # Keeping updated version
+  
+  # State Management
+  flutter_bloc: ^9.1.1
+  bloc: ^9.2.0
+  
+
+  
+  # Navigation
+  go_router: ^17.1.0
+  
+  # Models & Equality
+  equatable: ^2.0.5
+  intl: ^0.20.2 # Minor version upgrade
+
+  
+  # Dependency Injection
+  get_it: ^9.2.0 # Major version upgrade
+  # Collection utilities for null-safe iteration
+  collection: ^1.18.0
+  
+  # Unique ID Generation
+  uuid: ^4.3.3
+  url_launcher: ^6.2.5
+
+  # Mime types
+  mime: ^1.0.5
+  pdf: ^3.10.10
+  printing: ^5.13.2
+  archive: ^3.6.1
+  share_plus: 7.2.1
+  google_fonts: ^8.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0 # Major version upgrade
+  path_provider_platform_interface: ^2.0.6 # Add back for testing Hive init
+  
+  # Hive Code Generation
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.13 # Reverted for compatibility with hive_generator
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_native_splash:
+  color: "#1E1635"
+  image: "assets/icon_foreground.png"
+  android_12:
+    image: "assets/icon_foreground.png"
+    icon_background_color: "#1E1635"
+    color: "#1E1635"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon_foreground.png" # For older devices
+  adaptive_icon_background: "#6C5CE7" # The new purple color
+  adaptive_icon_foreground: "assets/icon_foreground.png" # Just the white symbol
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/icons/
+    - assets/fonts/
+
+  fonts:
+    - family: NotoNastaliqUrdu
+      fonts:
+        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
