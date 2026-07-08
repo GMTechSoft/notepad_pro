@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:notepad_pro/presentation/screens/privacy_policy_screen.dart';
 import 'package:notepad_pro/presentation/screens/settings/app_guide_screen.dart';
+import 'package:notepad_pro/data/app_content/about_notepilot_data.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -30,7 +31,7 @@ class AboutScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          const Text("About Notepad Pro",
+          const Text(AboutNotePilotData.pageTitle,
             style: TextStyle(fontSize: 15,
               fontWeight: FontWeight.w500,
               color: Color(0xFF2D2540))),
@@ -63,7 +64,7 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // App name
-                const Text("Notepad Pro",
+                const Text(AboutNotePilotData.appName,
                   style: TextStyle(fontSize: 17,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF2D2540))),
@@ -71,8 +72,7 @@ class AboutScreen extends StatelessWidget {
 
                 // Tagline
                 const Text(
-                  "Aapke notes secure, organized aur hamesha "
-                  "aapke saath — chahe online ho ya offline",
+                  AboutNotePilotData.appTagline,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11,
                     color: Color(0xFF9B8DB8), height: 1.6),
@@ -90,17 +90,17 @@ class AboutScreen extends StatelessWidget {
                         color: const Color(0xFFEDE9F8),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text("Version 1.0.0",
+                      child: const Text(AboutNotePilotData.versionBadge,
                         style: TextStyle(fontSize: 10,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF6C5CE7))),
                     ),
                     _dot(),
-                    const Text("June 2026",
+                    const Text(AboutNotePilotData.releaseDateBadge,
                       style: TextStyle(fontSize: 10,
                         color: Color(0xFF9B8DB8))),
                     _dot(),
-                    const Text("Android",
+                    const Text(AboutNotePilotData.platformBadge,
                       style: TextStyle(fontSize: 10,
                         color: Color(0xFF9B8DB8))),
                   ],
@@ -111,7 +111,7 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 9),
 
           // SECTION 3 — APP KI KHASIYAT (features)
-          _sectionLabel("App ki khasiyat"),
+          _sectionLabel(AboutNotePilotData.featuresSectionLabel),
 
           Container(
             decoration: BoxDecoration(
@@ -120,67 +120,22 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(
                 color: const Color(0xFFE0D9F5), width: 0.5),
             ),
-            child: Column(children: [
-              _featureRow(
-                iconBg: const Color(0xFFEDE9F8),
-                iconColor: const Color(0xFF6C5CE7),
-                icon: Icons.folder_outlined,
-                title: "Color-coded folders",
-                desc: "Notes ko apne pasandida rang ke folders mein "
-                  "organize karein. Har folder alag colour ka ho sakta hai.",
-              ),
-              _divider(),
-              _featureRow(
-                iconBg: const Color(0xFFE1F5EE),
-                iconColor: const Color(0xFF0F6E56),
-                icon: Icons.cloud_upload_outlined,
-                title: "Google Drive backup",
-                desc: "Google se sign in karein to notes automatically "
-                  "Drive mein safe ho jaate hain. Offline bhi kaam karta hai.",
-              ),
-              _divider(),
-              _featureRow(
-                iconBg: const Color(0xFFE3F2FD),
-                iconColor: const Color(0xFF1565C0),
-                icon: Icons.search_outlined,
-                title: "Smart search",
-                desc: "Koi bhi lafz likhein — note ke andar se bhi "
-                  "results dhundhta hai, Urdu mein bhi.",
-              ),
-              _divider(),
-              _featureRow(
-                iconBg: const Color(0xFFFFF3E0),
-                iconColor: const Color(0xFFE65100),
-                icon: Icons.bookmark_outline,
-                title: "Book & Video reference",
-                desc: "Har note ke saath book ka page number ya "
-                  "video ka timestamp attach karein.",
-              ),
-              _divider(),
-              _featureRow(
-                iconBg: const Color(0xFFFCE4EC),
-                iconColor: const Color(0xFFAD1457),
-                icon: Icons.picture_as_pdf_outlined,
-                title: "PDF export & print",
-                desc: "Notes ko PDF mein save karein ya seedha "
-                  "printer pe bhejein.",
-              ),
-              _divider(),
-              _featureRow(
-                iconBg: const Color(0xFFF3E5F5),
-                iconColor: const Color(0xFF6A1B9A),
-                icon: Icons.dark_mode_outlined,
-                title: "Dark mode",
-                desc: "Raat ko padhne ke liye aankhon ko "
-                  "comfortable dark theme.",
-                isLast: true,
-              ),
-            ]),
+            child: Column(
+              children: AboutNotePilotData.features.map((feature) {
+                final isLast = feature == AboutNotePilotData.features.last;
+                return Column(
+                  children: [
+                    _buildFeatureRowFromData(feature),
+                    if (!isLast) _divider(),
+                  ]
+                );
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 9),
 
           // SECTION 4 — APP KI MALOMAT (info rows)
-          _sectionLabel("App ki malomat"),
+          _sectionLabel(AboutNotePilotData.infoSectionLabel),
 
           Container(
             decoration: BoxDecoration(
@@ -189,49 +144,17 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(
                 color: const Color(0xFFE0D9F5), width: 0.5),
             ),
-            child: Column(children: [
-              _infoRow(
-                iconBg: const Color(0xFFEDE9F8),
-                iconColor: const Color(0xFF6C5CE7),
-                icon: Icons.info_outline,
-                label: "Version",
-                value: "1.0.0 (build 100)",
-              ),
-              _infoRow(
-                iconBg: const Color(0xFFE1F5EE),
-                iconColor: const Color(0xFF0F6E56),
-                icon: Icons.calendar_today_outlined,
-                label: "Release date",
-                value: "June 2026",
-              ),
-              _infoRow(
-                iconBg: const Color(0xFFE3F2FD),
-                iconColor: const Color(0xFF1565C0),
-                icon: Icons.phone_android_outlined,
-                label: "Platform",
-                value: "Android 8.0+",
-              ),
-              _infoRow(
-                iconBg: const Color(0xFFFFF3E0),
-                iconColor: const Color(0xFFE65100),
-                icon: Icons.language_outlined,
-                label: "Zubaan",
-                value: "Urdu · English",
-              ),
-              _infoRow(
-                iconBg: const Color(0xFFF3E5F5),
-                iconColor: const Color(0xFF6A1B9A),
-                icon: Icons.storage_outlined,
-                label: "Data storage",
-                value: "Local + Google Drive",
-                isLast: true,
-              ),
-            ]),
+            child: Column(
+              children: AboutNotePilotData.information.map((info) {
+                final isLast = info == AboutNotePilotData.information.last;
+                return _buildInfoRowFromData(info, isLast: isLast);
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 9),
 
           // SECTION 5 — REVIEW & RABTA
-          _sectionLabel("Review & rabta"),
+          _sectionLabel(AboutNotePilotData.reviewSectionLabel),
 
           // Rate card
           Container(
@@ -258,11 +181,11 @@ class AboutScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("App ko rate karein",
+                    Text(AboutNotePilotData.rateAppTitle,
                       style: TextStyle(fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF2D2540))),
-                    Text("Play Store pe review dein",
+                    Text(AboutNotePilotData.rateAppDesc,
                       style: TextStyle(fontSize: 10,
                         color: Color(0xFF9B8DB8))),
                   ],
@@ -271,8 +194,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: () {
-                  launchUrl(Uri.parse(
-                    'market://details?id=com.notepad.pro.notes'),
+                  launchUrl(Uri.parse(AboutNotePilotData.rateAppUrl),
                     mode: LaunchMode.externalApplication);
                 },
                 child: Container(
@@ -282,7 +204,7 @@ class AboutScreen extends StatelessWidget {
                     color: const Color(0xFF6C5CE7),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text("Rate karein",
+                  child: const Text(AboutNotePilotData.rateAppButton,
                     style: TextStyle(fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: Colors.white)),
@@ -300,46 +222,24 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(
                 color: const Color(0xFFE0D9F5), width: 0.5),
             ),
-            child: Column(children: [
-              _linkRow(
-                iconBg: const Color(0xFFEDE9F8),
-                iconColor: const Color(0xFF6C5CE7),
-                icon: Icons.mail_outline,
-                label: "Feedback ya masla report karein",
-                onTap: () {
-                  launchUrl(Uri.parse(
-                    'mailto:support@notepadpro.com'));
-                },
-              ),
-              _divider(),
-              _linkRow(
-                iconBg: const Color(0xFFE1F5EE),
-                iconColor: const Color(0xFF0F6E56),
-                icon: Icons.shield_outlined,
-                label: "Privacy Policy",
-                onTap: () => Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (_) => const PrivacyPolicyScreen())),
-              ),
-              _divider(),
-              _linkRow(
-                iconBg: const Color(0xFFE3F2FD),
-                iconColor: const Color(0xFF1565C0),
-                icon: Icons.book_outlined,
-                label: "App Guide",
-                onTap: () => Navigator.push(context,
-                  MaterialPageRoute(
-                    builder: (_) => const AppGuideScreen())),
-                isLast: true,
-              ),
-            ]),
+            child: Column(
+              children: AboutNotePilotData.links.map((link) {
+                final isLast = link == AboutNotePilotData.links.last;
+                return Column(
+                  children: [
+                    _buildLinkRowFromData(link, context, isLast: isLast),
+                    if (!isLast) _divider(),
+                  ]
+                );
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 16),
 
           // Copyright
           const Center(
             child: Text(
-              "© 2026 Notepad Pro · Tamam huqooq mahfooz hain",
+              AboutNotePilotData.copyrightText,
               style: TextStyle(
                 fontSize: 10, color: Color(0xFFC4B8E0)),
             ),
@@ -372,14 +272,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _featureRow({
-    required Color iconBg,
-    required Color iconColor,
-    required IconData icon,
-    required String title,
-    required String desc,
-    bool isLast = false,
-  }) {
+  Widget _buildFeatureRowFromData(AboutFeatureData data) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 13, vertical: 11),
@@ -389,22 +282,22 @@ class AboutScreen extends StatelessWidget {
           Container(
             width: 32, height: 32,
             decoration: BoxDecoration(
-              color: iconBg,
+              color: data.iconBg,
               borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(icon, size: 16, color: iconColor),
+            child: Icon(data.icon, size: 16, color: data.iconColor),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
+                Text(data.title,
                   style: const TextStyle(fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF2D2540))),
                 const SizedBox(height: 2),
-                Text(desc,
+                Text(data.desc,
                   style: const TextStyle(fontSize: 10,
                     color: Color(0xFF9B8DB8), height: 1.5)),
               ],
@@ -422,14 +315,7 @@ class AboutScreen extends StatelessWidget {
     thickness: 0.5,
   );
 
-  Widget _infoRow({
-    required Color iconBg,
-    required Color iconColor,
-    required IconData icon,
-    required String label,
-    required String value,
-    bool isLast = false,
-  }) {
+  Widget _buildInfoRowFromData(AboutInfoData data, {bool isLast = false}) {
     return Column(children: [
       Padding(
         padding: const EdgeInsets.symmetric(
@@ -438,18 +324,18 @@ class AboutScreen extends StatelessWidget {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              color: iconBg,
+              color: data.iconBg,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 14, color: iconColor),
+            child: Icon(data.icon, size: 14, color: data.iconColor),
           ),
           const SizedBox(width: 9),
-          Text(label,
+          Text(data.label,
             style: const TextStyle(fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Color(0xFF2D2540))),
           const Spacer(),
-          Text(value,
+          Text(data.value,
             style: const TextStyle(fontSize: 11,
               color: Color(0xFF9B8DB8))),
         ]),
@@ -460,16 +346,17 @@ class AboutScreen extends StatelessWidget {
     ]);
   }
 
-  Widget _linkRow({
-    required Color iconBg,
-    required Color iconColor,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isLast = false,
-  }) {
+  Widget _buildLinkRowFromData(AboutLinkData data, BuildContext context, {bool isLast = false}) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        if (data.isPrivacyPolicy) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+        } else if (data.isAppGuide) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AppGuideScreen()));
+        } else if (data.url != null) {
+          launchUrl(Uri.parse(data.url!));
+        }
+      },
       borderRadius: isLast
         ? const BorderRadius.vertical(
             bottom: Radius.circular(12))
@@ -481,14 +368,14 @@ class AboutScreen extends StatelessWidget {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              color: iconBg,
+              color: data.iconBg,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 14, color: iconColor),
+            child: Icon(data.icon, size: 14, color: data.iconColor),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label,
+            child: Text(data.label,
               style: const TextStyle(fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF2D2540))),

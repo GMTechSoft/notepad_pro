@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../data/app_content/about_notepilot_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -374,9 +375,10 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      context.read<SyncCubit>().restoreNow();
+                    onPressed: () async {
+                      final syncCubit = context.read<SyncCubit>();
                       Navigator.pop(ctx);
+                      await syncCubit.restoreNow(context: context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C5CE7),
@@ -572,8 +574,8 @@ class SettingsScreen extends StatelessWidget {
           const Divider(height: 1, color: Color(0xFFE0D9F5), thickness: 0.5),
           _buildListRow(
             icon: Icons.info_outline,
-            title: "About Notepad Pro",
-            subtitle: "Version 1.0.0 · Help guide",
+            title: "About NotePilot",
+            subtitle: "Version ${AboutNotePilotData.versionBadge} · Help guide",
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen())),
           ),
           const Divider(height: 1, color: Color(0xFFE0D9F5), thickness: 0.5),

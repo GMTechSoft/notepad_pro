@@ -30,7 +30,7 @@ class App extends StatelessWidget {
           return BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
               return MaterialApp.router(
-                title: 'Notepad Pro',
+                title: 'NotePilot',
                 debugShowCheckedModeBanner: false,
                 themeMode: themeMode,
                 theme: ThemeData(

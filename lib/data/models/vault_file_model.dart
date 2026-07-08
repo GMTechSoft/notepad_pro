@@ -4,6 +4,8 @@ import '../../domain/entities/vault_file.dart' as domain_vault_file; // Alias th
 
 part 'vault_file_model.g.dart';
 
+const Object _sentinel = Object();
+
 @HiveType(typeId: 1) // TypeId for ReferenceType enum in the data layer
 enum ReferenceType {
   @HiveField(0)
@@ -76,42 +78,42 @@ class VaultFileModel extends Equatable {
 
   VaultFileModel copyWith({
     String? id,
-    String? folderId,
+    Object? folderId = _sentinel,
     String? title,
-    String? description,
+    Object? description = _sentinel,
     ReferenceType? referenceType,
-    String? videoTitle,
-    int? videoRefHours,
-    int? videoRefMinutes,
-    int? videoRefSeconds,
-    String? bookName,
-    String? authorName,
-    String? volume,
-    int? pageNumber,
-    int? lineNumber,
+    Object? videoTitle = _sentinel,
+    Object? videoRefHours = _sentinel,
+    Object? videoRefMinutes = _sentinel,
+    Object? videoRefSeconds = _sentinel,
+    Object? bookName = _sentinel,
+    Object? authorName = _sentinel,
+    Object? volume = _sentinel,
+    Object? pageNumber = _sentinel,
+    Object? lineNumber = _sentinel,
     DateTime? createdAt,
     DateTime? lastModified,
-    String? driveFileId,
+    Object? driveFileId = _sentinel,
     bool? isSynced,
   }) {
     return VaultFileModel(
       id: id ?? this.id,
-      folderId: folderId ?? this.folderId,
+      folderId: folderId == _sentinel ? this.folderId : folderId as String?,
       title: title ?? this.title,
-      description: description ?? this.description,
+      description: description == _sentinel ? this.description : description as String,
       referenceType: referenceType ?? this.referenceType,
-      videoTitle: videoTitle ?? this.videoTitle,
-      videoRefHours: videoRefHours ?? this.videoRefHours,
-      videoRefMinutes: videoRefMinutes ?? this.videoRefMinutes,
-      videoRefSeconds: videoRefSeconds ?? this.videoRefSeconds,
-      bookName: bookName ?? this.bookName,
-      authorName: authorName ?? this.authorName,
-      volume: volume ?? this.volume,
-      pageNumber: pageNumber ?? this.pageNumber,
-      lineNumber: lineNumber ?? this.lineNumber,
+      videoTitle: videoTitle == _sentinel ? this.videoTitle : videoTitle as String?,
+      videoRefHours: videoRefHours == _sentinel ? this.videoRefHours : videoRefHours as int?,
+      videoRefMinutes: videoRefMinutes == _sentinel ? this.videoRefMinutes : videoRefMinutes as int?,
+      videoRefSeconds: videoRefSeconds == _sentinel ? this.videoRefSeconds : videoRefSeconds as int?,
+      bookName: bookName == _sentinel ? this.bookName : bookName as String?,
+      authorName: authorName == _sentinel ? this.authorName : authorName as String?,
+      volume: volume == _sentinel ? this.volume : volume as String?,
+      pageNumber: pageNumber == _sentinel ? this.pageNumber : pageNumber as int?,
+      lineNumber: lineNumber == _sentinel ? this.lineNumber : lineNumber as int?,
       createdAt: createdAt ?? this.createdAt,
       lastModified: lastModified ?? this.lastModified,
-      driveFileId: driveFileId ?? this.driveFileId,
+      driveFileId: driveFileId == _sentinel ? this.driveFileId : driveFileId as String?,
       isSynced: isSynced ?? this.isSynced,
     );
   }
@@ -209,7 +211,7 @@ class VaultFileModel extends Equatable {
           ? null
           : (json['folderId'] is int ? json['folderId'].toString() : json['folderId'] as String),
       title: json['title'] as String,
-      description: json['description'] as String,
+      description: json['description'] as String? ?? '',
       referenceType: parsedRefType,
       videoTitle: json['videoTitle'] as String?,
       videoRefHours: json['videoRefHours'] as int?,

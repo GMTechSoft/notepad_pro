@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
-import 'package:notepad_pro/core/utils/date_formatter.dart';
+import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
+
+import '../../../core/utils/date_formatter.dart';
 
 class FileCard extends StatelessWidget {
   final VaultFile file;
@@ -38,93 +40,125 @@ class FileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color fileColor = Color(0xFF0F6E56); // Teal for files
+    final isSelected = context.select<SelectionCubit, bool>((cubit) => cubit.state.selectedMap.containsKey(file.id));
+    final isSelectionMode = context.select<SelectionCubit, bool>((cubit) => cubit.state.isSelectionMode);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          // Left Side Strip
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 4,
-              color: fileColor,
-            ),
+    final Widget card = GestureDetector(
+      onLongPress: () => context.read<SelectionCubit>().toggleSelection(file.id, false),
+      onTap: () {
+        if (isSelectionMode) {
+          context.read<SelectionCubit>().toggleSelection(file.id, false);
+        } else {
+          context.push('/read-note', extra: {'file': file, 'highlightQuery': null});
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEDE9F8) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFE0D9F5), 
+            width: isSelected ? 1.5 : 0.5
           ),
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            leading: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: fileColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.description_outlined, 
-                size: 20, 
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Left Side Strip
+            if (!isSelected)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 4,
                 color: fileColor,
               ),
             ),
-            title: Text(
-              file.title, 
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: Color(0xFF2D2540),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              '${file.description.isEmpty ? "No description" : file.description} · ${DateFormatter.getFormattedDate(file.updatedAt)}',
-              style: const TextStyle(
-                color: Color(0xFF9B8DB8),
-                fontSize: 10,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
-              onSelected: (value) {
-                if (value == 'edit') {
-                  context.push('/create-file', extra: file);
-                } else if (value == 'delete') {
-                  _showDeleteDialog(context);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Edit'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              leading: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: fileColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline, color: Colors.red),
-                    title: Text('Delete', style: TextStyle(color: Colors.red)),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                child: const Icon(
+                  Icons.description_outlined, 
+                  size: 20, 
+                  color: fileColor,
                 ),
-              ],
+              ),
+              title: Text(
+                file.title, 
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: Color(0xFF2D2540),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '${file.description.isEmpty ? "No description" : file.description} · ${DateFormatter.getFormattedDate(file.updatedAt)}',
+                style: const TextStyle(
+                  color: Color(0xFF9B8DB8),
+                  fontSize: 10,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: isSelected 
+                ? const Icon(Icons.check_circle_rounded, color: Color(0xFF6C5CE7), size: 22)
+                : (isSelectionMode ? null : PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
+                onSelected: (value) {
+                  if (value == 'edit') {
+                      context.push('/create-file', extra: file);
+                    } else if (value == 'delete') {
+                      _showDeleteDialog(context);
+                    } else if (value == 'move') {
+                      context.push('/move-item', extra: [file]);
+                    }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Edit'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'move',
+                    child: ListTile(
+                      leading: Icon(Icons.drive_file_move_outline, color: Color(0xFF6C5CE7)),
+                      title: Text('Move'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline, color: Colors.red),
+                      title: Text('Delete', style: TextStyle(color: Colors.red)),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              )),
             ),
-            onTap: () => context.push('/read-note', extra: file),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+    
+    return SizedBox(
+      width: double.infinity,
+      child: card,
     );
   }
 }

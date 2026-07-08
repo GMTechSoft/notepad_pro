@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Notepad Pro',
+                  'NotePilot',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w500,

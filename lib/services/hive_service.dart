@@ -41,6 +41,10 @@ class HiveService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshBoxes() async {
+    notifyListeners();
+  }
+
   Future<void> setManualRestorePerformed(bool value) async {
     await _appSettingsBox.put(_restoreKey, value);
     notifyListeners();
@@ -123,22 +127,14 @@ class HiveService extends ChangeNotifier {
   List<NoteModel> getUnsyncedNotes() => _noteBox.values.where((n) => !n.isSynced).toList();
   List<VaultFileModel> getUnsyncedFiles() => _fileBox.values.where((f) => !f.isSynced).toList();
 
-  // Nuclear Restore Pattern
-  Future<void> clearAllData() async {
-    await _folderBox.clear();
-    await _fileBox.clear();
-    await _noteBox.clear();
-    await setInitialized(false);
-    await setManualRestorePerformed(false);
-    notifyListeners();
-  }
-
   // Efficient Restore
   Future<void> restoreData({
     required List<FolderModel> folders,
     required List<NoteModel> notes,
     required List<VaultFileModel> files,
   }) async {
+    debugPrint('restoreData called');
+    debugPrintInfo('Before restoreData');
     await _folderBox.clear();
     await _noteBox.clear();
     await _fileBox.clear();
@@ -153,7 +149,41 @@ class HiveService extends ChangeNotifier {
 
     await setManualRestorePerformed(true);
     await setInitialized(true);
+    debugPrintInfo('After restoreData');
     notifyListeners();
   }
-}
 
+  // Debug helper method
+  void debugPrintInfo(String context) {
+    final serviceHash = this.hashCode;
+    final folderBoxHash = _folderBox.hashCode;
+    final fileBoxHash = _fileBox.hashCode;
+    final folderCount = _folderBox.length;
+    final fileCount = _fileBox.length;
+    debugPrint('--- DebugInfo [$context] ---');
+    debugPrint('HiveService hashCode: $serviceHash');
+    debugPrint('folderBox hashCode: $folderBoxHash');
+    debugPrint('fileBox hashCode: $fileBoxHash');
+    debugPrint('folder count: $folderCount');
+    debugPrint('file count: $fileCount');
+    for (var f in _folderBox.values) {
+      debugPrint('Folder -> id: ${f.id}, name: ${f.name}, parentId: ${f.parentId}');
+    }
+    for (var file in _fileBox.values) {
+      debugPrint('File -> id: ${file.id}, title: ${file.title}, folderId: ${file.folderId}');
+    }
+    debugPrint('--- End DebugInfo [$context] ---');
+    // Print stack trace  // Nuclear Restore Pattern
+  }
+
+  Future<void> clearAllData() async {
+    await _folderBox.clear();
+    await _fileBox.clear();
+    await _noteBox.clear();
+    await setInitialized(false);
+    await setManualRestorePerformed(false);
+    notifyListeners();
+  }
+
+
+}

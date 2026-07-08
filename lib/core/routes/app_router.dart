@@ -12,6 +12,7 @@ import 'package:notepad_pro/presentation/screens/search/search_screen.dart';
 import 'package:notepad_pro/presentation/screens/splash_screen.dart';
 import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/theme/theme_cubit.dart';
+import 'package:notepad_pro/presentation/screens/folders/move_item_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -21,6 +22,10 @@ class AppRouter {
         name: 'splash',
         path: '/',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/move-item',
+        builder: (context, state) => MoveItemScreen(itemsToMove: state.extra as List<dynamic>),
       ),
       GoRoute(
         name: 'home',
@@ -64,14 +69,49 @@ class AppRouter {
         name: 'read-note',
         path: '/read-note',
         builder: (context, state) {
-          final file = state.extra as VaultFile;
-          return ReadNoteScreen(file: file);
+          VaultFile? file;
+          String? query;
+          List<String>? highlightWords;
+          String? searchMode;
+          Map<String, Color>? highlightColors;
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            file = extra['file'] as VaultFile?;
+            query = extra['highlightQuery'] as String?;
+            highlightWords = (extra['highlightWords'] as List<dynamic>?)?.cast<String>();
+            searchMode = extra['searchMode'] as String?;
+            highlightColors = extra['highlightColors'] as Map<String, Color>?;
+          } else if (extra is VaultFile) {
+            file = extra;
+          }
+          // Provide a default placeholder file to avoid null crashes
+          file ??= VaultFile(
+            id: '',
+            title: '',
+            description: '',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            referenceType: ReferenceType.none,
+          );
+          return ReadNoteScreen(
+            file: file,
+            highlightQuery: query,
+            highlightWords: highlightWords,
+            searchMode: searchMode,
+            highlightColors: highlightColors,
+          );
         },
       ),
       GoRoute(
         path: '/search',
         name: 'search',
-        builder: (context, state) => const SearchScreen(),
+        builder: (context, state) {
+          final Map<String, dynamic> extraArgs = state.extra as Map<String, dynamic>? ?? {};
+          final String initialQuery = extraArgs['initialQuery'] as String? ?? '';
+          final String? folderId = extraArgs['folderId'] as String?;
+          return SearchScreen(initialQuery: initialQuery, folderId: folderId);
+        },
+
       ),
       GoRoute(
         name: 'settings',

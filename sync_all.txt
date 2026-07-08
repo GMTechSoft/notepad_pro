@@ -1,0 +1,1210 @@
+﻿
+lib\core\di\service_locator.dart:12:import '../../presentation/blocs/sync/sync_cubit.dart'; // Import SyncCubit
+lib\core\di\service_locator.dart:14:import '../../services/google_drive_sync_service.dart'; // Import 
+GoogleDriveSyncService
+lib\core\di\service_locator.dart:29:}) async {
+lib\core\di\service_locator.dart:53:  // Register GoogleDriveSyncService
+lib\core\di\service_locator.dart:54:  sl.registerLazySingleton<GoogleDriveSyncService>(
+lib\core\di\service_locator.dart:55:    () => GoogleDriveSyncService(sl(), sl()), // Inject AuthService and HiveService
+lib\core\di\service_locator.dart:69:    () => FoldersCubit(sl(), sl()), // Inject IVaultRepository and SyncCubit
+lib\core\di\service_locator.dart:74:    () => FilesCubit(sl(), sl()), // Inject IVaultRepository and SyncCubit
+lib\core\di\service_locator.dart:79:    () => NotesCubit(sl(), sl()), // Inject INoteRepository and SyncCubit
+lib\core\di\service_locator.dart:82:  // Register SyncCubit
+lib\core\di\service_locator.dart:83:  sl.registerLazySingleton<SyncCubit>(
+lib\core\di\service_locator.dart:84:    () => SyncCubit(sl(), sl(), sl()),
+lib\core\routes\app_router.dart:13:import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+lib\core\routes\app_router.dart:116:            BlocProvider.value(value: context.read<SyncCubit>()),
+lib\data\models\folder_model.dart:26:  final bool isSynced;
+lib\data\models\folder_model.dart:40:    this.isSynced = false,
+lib\data\models\folder_model.dart:54:        isSynced
+lib\data\models\folder_model.dart:67:    bool? isSynced,
+lib\data\models\folder_model.dart:79:      isSynced: isSynced ?? this.isSynced,
+lib\data\models\folder_model.dart:95:      isSynced: isSynced,
+lib\data\models\folder_model.dart:111:      isSynced: entity.isSynced,
+lib\data\models\folder_model.dart:126:      isSynced: json['isSynced'] as bool? ?? false,
+lib\data\models\folder_model.dart:141:      'isSynced': isSynced,
+lib\data\models\folder_model.g.dart:29:      isSynced: fields[8] as bool,
+lib\data\models\folder_model.g.dart:54:      ..write(obj.isSynced)
+lib\data\models\note_model.dart:21:  final bool isSynced;
+lib\data\models\note_model.dart:33:    this.isSynced = false,
+lib\data\models\note_model.dart:34:  }) : super(id: id, folderId: folderId, title: title, content: content, createdAt: 
+createdAt, updatedAt: updatedAt, driveFileId: driveFileId, isSynced: isSynced);
+lib\data\models\note_model.dart:45:      isSynced: entity.isSynced,
+lib\data\models\note_model.dart:58:      isSynced: isSynced,
+lib\data\models\note_model.dart:71:    bool? isSynced,
+lib\data\models\note_model.dart:81:      isSynced: isSynced ?? this.isSynced,
+lib\data\models\note_model.dart:94:      isSynced: json['isSynced'] as bool? ?? false,
+lib\data\models\note_model.dart:107:      'isSynced': isSynced,
+lib\data\models\note_model.g.dart:27:      isSynced: fields[6] as bool,
+lib\data\models\note_model.g.dart:48:      ..write(obj.isSynced)
+lib\data\models\vault_file_model.dart:54:  final bool isSynced;
+lib\data\models\vault_file_model.dart:74:    this.isSynced = false,
+lib\data\models\vault_file_model.dart:95:    bool? isSynced,
+lib\data\models\vault_file_model.dart:115:      isSynced: isSynced ?? this.isSynced,
+lib\data\models\vault_file_model.dart:139:      isSynced,
+lib\data\models\vault_file_model.dart:163:      isSynced: isSynced,
+lib\data\models\vault_file_model.dart:187:      isSynced: entity.isSynced,
+lib\data\models\vault_file_model.dart:226:      isSynced: json['isSynced'] as bool? ?? false,
+lib\data\models\vault_file_model.dart:249:      'isSynced': isSynced,
+lib\data\models\vault_file_model.g.dart:37:      isSynced: fields[18] as bool,
+lib\data\models\vault_file_model.g.dart:80:      ..write(obj.isSynced);
+lib\data\repositories\note_repository_impl.dart:1:import 'dart:async';
+lib\data\repositories\note_repository_impl.dart:14:  Future<List<NoteModel>> getAllNotes() async {
+lib\data\repositories\note_repository_impl.dart:19:  Future<NoteModel?> getNote(String id) async {
+lib\data\repositories\note_repository_impl.dart:24:  Future<void> updateNote(NoteModel note) async {
+lib\data\repositories\note_repository_impl.dart:29:  Future<void> deleteNote(String id) async {
+lib\data\repositories\note_repository_impl.dart:34:  Future<NoteModel> createNote({required String title, required 
+String content, String? folderId}) async {
+lib\data\repositories\note_repository_impl.dart:42:      isSynced: true, // Default to true as there's no cloud to 
+sync with
+lib\data\repositories\vault_repository_impl.dart:1:import 'dart:async';
+lib\data\repositories\vault_repository_impl.dart:18:  Future<List<Folder>> getFolders(String? parentId) async {
+lib\data\repositories\vault_repository_impl.dart:27:  Future<Folder?> getFolder(String id) async {
+lib\data\repositories\vault_repository_impl.dart:39:  }) async {
+lib\data\repositories\vault_repository_impl.dart:57:  Future<List<Folder>> getAllFolders() async {
+lib\data\repositories\vault_repository_impl.dart:65:  Future<void> updateFolder(Folder folder) async {
+lib\data\repositories\vault_repository_impl.dart:71:  Future<void> deleteFolder(String id) async {
+lib\data\repositories\vault_repository_impl.dart:77:  Future<List<VaultFile>> getFiles(String? folderId) async {
+lib\data\repositories\vault_repository_impl.dart:100:  }) async {
+lib\data\repositories\vault_repository_impl.dart:126:  Future<void> updateFile(VaultFile file) async {
+lib\data\repositories\vault_repository_impl.dart:132:  Future<void> moveFileToFolder({required String fileId, required 
+String? targetFolderId}) async {
+lib\data\repositories\vault_repository_impl.dart:143:    // Optionally, you could trigger a sync here, but UI will 
+refresh via Cubit
+lib\data\repositories\vault_repository_impl.dart:147:  Future<bool> isDescendant({required String folderId, required 
+String? possibleParentId}) async {
+lib\data\repositories\vault_repository_impl.dart:164:  Future<void> deleteFile(String id) async {
+lib\data\repositories\vault_repository_impl.dart:169:  Future<List<VaultFile>> getAllFiles() async {
+lib\data\repositories\vault_repository_impl.dart:178:  Future<void> moveItem({required String itemId, required String? 
+newParentFolderId}) async {
+lib\data\repositories\vault_repository_impl.dart:207:  Future<bool> isDescendantOf({required String folderId, required 
+String? possibleParentId}) async {
+lib\data\repositories\vault_repository_impl.dart:214:  Future<List<VaultFile>> getDirectChildren(String? folderId) 
+async {
+lib\data\repositories\vault_repository_impl.dart:225:  Future<int> fixOrphanedItems() async {
+lib\data\repositories\vault_repository_impl.dart:245:  Future<String> getFullPath(String folderId) async {
+lib\data\repositories\vault_repository_impl.dart:259:  Future<List<String>> getRecentFolderIds({int limit = 5}) async {
+lib\domain\entities\folder.dart:13:  final bool isSynced;
+lib\domain\entities\folder.dart:25:    this.isSynced = false,
+lib\domain\entities\folder.dart:39:        isSynced,
+lib\domain\entities\folder.dart:52:    bool? isSynced,
+lib\domain\entities\folder.dart:64:      isSynced: isSynced ?? this.isSynced,
+lib\domain\entities\note_entity.dart:11:  final bool isSynced;
+lib\domain\entities\note_entity.dart:21:    this.isSynced = false,
+lib\domain\entities\note_entity.dart:25:  List<Object?> get props => [id, folderId, title, content, createdAt, 
+updatedAt, driveFileId, isSynced];
+lib\domain\entities\note_entity.dart:35:    bool? isSynced,
+lib\domain\entities\note_entity.dart:45:      isSynced: isSynced ?? this.isSynced,
+lib\domain\entities\vault_file.dart:27:  final bool isSynced;
+lib\domain\entities\vault_file.dart:47:    this.isSynced = false,
+lib\domain\entities\vault_file.dart:69:    isSynced,
+lib\domain\entities\vault_file.dart:90:    bool? isSynced,
+lib\domain\entities\vault_file.dart:110:      isSynced: isSynced ?? this.isSynced,
+lib\presentation\blocs\files\files_cubit.dart:5:import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+lib\presentation\blocs\files\files_cubit.dart:41:  final SyncCubit _syncCubit;
+lib\presentation\blocs\files\files_cubit.dart:48:  FilesCubit(this._vaultRepository, this._syncCubit) : 
+super(FilesInitial());
+lib\presentation\blocs\files\files_cubit.dart:50:  Future<void> loadFiles() async {
+lib\presentation\blocs\files\files_cubit.dart:74:  }) async {
+lib\presentation\blocs\files\files_cubit.dart:93:      _syncCubit.performAutoSync();
+lib\presentation\blocs\files\files_cubit.dart:99:  Future<void> updateFile(VaultFile file) async {
+lib\presentation\blocs\files\files_cubit.dart:103:      _syncCubit.performAutoSync();
+lib\presentation\blocs\files\files_cubit.dart:109:  Future<void> deleteFile(String id) async {
+lib\presentation\blocs\files\files_cubit.dart:113:      _syncCubit.performAutoSync();
+lib\presentation\blocs\files\files_cubit.dart:120:  Future<void> moveItem({required String itemId, required String? 
+targetFolderId}) async {
+lib\presentation\blocs\files\files_cubit.dart:140:      // Trigger sync asynchronously
+lib\presentation\blocs\files\files_cubit.dart:141:      Future(() => _syncCubit.performAutoSync());
+lib\presentation\blocs\files\files_cubit.dart:148:  Future<void> undoLastMove() async {
+lib\presentation\blocs\files\files_cubit.dart:160:      Future(() => _syncCubit.performAutoSync());
+lib\presentation\blocs\files\files_cubit.dart:166:  // Updated moveFileToFolder: instantly updates UI and triggers 
+background sync
+lib\presentation\blocs\files\files_cubit.dart:167:  Future<void> moveFileToFolder({required String fileId, required 
+String? targetFolderId}) async {
+lib\presentation\blocs\files\files_cubit.dart:171:      // Trigger sync without awaiting to avoid blocking UI
+lib\presentation\blocs\files\files_cubit.dart:172:      Future(() => _syncCubit.performAutoSync());
+lib\presentation\blocs\folders\folders_cubit.dart:5:import 
+'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+lib\presentation\blocs\folders\folders_cubit.dart:11:  final SyncCubit _syncCubit;
+lib\presentation\blocs\folders\folders_cubit.dart:13:  FoldersCubit(this._vaultRepository, this._syncCubit) : 
+super(FoldersInitial());
+lib\presentation\blocs\folders\folders_cubit.dart:15:  Future<void> loadFolders() async {
+lib\presentation\blocs\folders\folders_cubit.dart:26:  Future<void> moveFolder({required String folderId, required 
+String? targetParentId}) async {
+lib\presentation\blocs\folders\folders_cubit.dart:48:          // Trigger sync without awaiting to keep UI responsive
+lib\presentation\blocs\folders\folders_cubit.dart:49:          Future(() => _syncCubit.performAutoSync());
+lib\presentation\blocs\folders\folders_cubit.dart:67:  }) async {
+lib\presentation\blocs\folders\folders_cubit.dart:78:      _syncCubit.performAutoSync();
+lib\presentation\blocs\folders\folders_cubit.dart:84:  Future<void> updateFolder(Folder folder) async {
+lib\presentation\blocs\folders\folders_cubit.dart:88:      _syncCubit.performAutoSync();
+lib\presentation\blocs\folders\folders_cubit.dart:94:  Future<void> deleteFolder(String id) async {
+lib\presentation\blocs\folders\folders_cubit.dart:98:      _syncCubit.performAutoSync();
+lib\presentation\blocs\notes\notes_cubit.dart:5:import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart'; 
+// Import SyncCubit
+lib\presentation\blocs\notes\notes_cubit.dart:11:  final SyncCubit _syncCubit; // Inject SyncCubit
+lib\presentation\blocs\notes\notes_cubit.dart:13:  NotesCubit(this._noteRepository, this._syncCubit) : 
+super(NotesInitial());
+lib\presentation\blocs\notes\notes_cubit.dart:15:  Future<void> loadNotes() async {
+lib\presentation\blocs\notes\notes_cubit.dart:25:  Future<void> createNote(String title, String content) async {
+lib\presentation\blocs\notes\notes_cubit.dart:29:      _syncCubit.performAutoSync();
+lib\presentation\blocs\notes\notes_cubit.dart:35:  Future<void> updateNote(String noteId, String newContent) async {
+lib\presentation\blocs\notes\notes_cubit.dart:45:        // Trigger auto-sync
+lib\presentation\blocs\notes\notes_cubit.dart:46:        _syncCubit.performAutoSync();
+lib\presentation\blocs\notes\notes_cubit.dart:55:  Future<void> deleteNote(String noteId) async {
+lib\presentation\blocs\notes\notes_cubit.dart:59:      _syncCubit.performAutoSync();
+lib\presentation\blocs\sync\sync_cubit.dart:1:import 'dart:async';
+lib\presentation\blocs\sync\sync_cubit.dart:6:import 'package:notepad_pro/services/google_drive_sync_service.dart';
+lib\presentation\blocs\sync\sync_cubit.dart:8:import 'sync_state.dart';
+lib\presentation\blocs\sync\sync_cubit.dart:10:class SyncCubit extends Cubit<SyncState> {
+lib\presentation\blocs\sync\sync_cubit.dart:12:  final GoogleDriveSyncService _syncService;
+lib\presentation\blocs\sync\sync_cubit.dart:14:  bool _isSyncing = false;
+lib\presentation\blocs\sync\sync_cubit.dart:17:  SyncCubit(this._authService, this._syncService, this._hiveService) : 
+super(const SyncState()) {
+lib\presentation\blocs\sync\sync_cubit.dart:18:    // Listen to auth state changes from SyncService's broadcast stream
+lib\presentation\blocs\sync\sync_cubit.dart:19:    _syncService.authStateStream.listen((user) async {
+lib\presentation\blocs\sync\sync_cubit.dart:21:        DateTime? parsedSyncTime;
+lib\presentation\blocs\sync\sync_cubit.dart:24:          final lastSyncStr = configBox.get('last_sync_time', 
+defaultValue: '') as String;
+lib\presentation\blocs\sync\sync_cubit.dart:25:          if (lastSyncStr.isNotEmpty) {
+lib\presentation\blocs\sync\sync_cubit.dart:26:            final ms = int.tryParse(lastSyncStr);
+lib\presentation\blocs\sync\sync_cubit.dart:27:            parsedSyncTime = ms != null ? 
+DateTime.fromMillisecondsSinceEpoch(ms) : DateTime.tryParse(lastSyncStr);
+lib\presentation\blocs\sync\sync_cubit.dart:34:          debugPrint('Sync settings read/write error: $e');
+lib\presentation\blocs\sync\sync_cubit.dart:38:          status: SyncStatus.synced,
+lib\presentation\blocs\sync\sync_cubit.dart:42:          lastSync: parsedSyncTime,
+lib\presentation\blocs\sync\sync_cubit.dart:45:        emit(const SyncState(status: SyncStatus.signedOut));
+lib\presentation\blocs\sync\sync_cubit.dart:51:    _progressSubscription = 
+_syncService.progressStream.listen((progress) {
+lib\presentation\blocs\sync\sync_cubit.dart:69:    final syncedFilesCount = _hiveService.fileBox.values.where((e) => 
+e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:70:    final syncedNotesCount = _hiveService.noteBox.values.where((e) => 
+e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:71:    final syncedFoldersCount = _hiveService.folderBox.values.where((e) 
+=> e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:72:    final totalSyncedCount = syncedFilesCount + syncedNotesCount + 
+syncedFoldersCount;
+lib\presentation\blocs\sync\sync_cubit.dart:76:      driveFiles: totalSyncedCount,
+lib\presentation\blocs\sync\sync_cubit.dart:80:      _hiveService.appSettingsBox.put('cloud_backup_count', 
+totalSyncedCount);
+lib\presentation\blocs\sync\sync_cubit.dart:82:      debugPrint('Sync settings write error: $e');
+lib\presentation\blocs\sync\sync_cubit.dart:95:  Future<void> initialize() async {
+lib\presentation\blocs\sync\sync_cubit.dart:102:      final String lastSyncTimeStr = configBox.get('last_sync_time', 
+defaultValue: '') as String;
+lib\presentation\blocs\sync\sync_cubit.dart:105:      DateTime? parsedSyncTime;
+lib\presentation\blocs\sync\sync_cubit.dart:106:      if (lastSyncTimeStr.isNotEmpty) {
+lib\presentation\blocs\sync\sync_cubit.dart:107:        final int? millis = int.tryParse(lastSyncTimeStr);
+lib\presentation\blocs\sync\sync_cubit.dart:109:          parsedSyncTime = DateTime.fromMillisecondsSinceEpoch(millis);
+lib\presentation\blocs\sync\sync_cubit.dart:111:          parsedSyncTime = DateTime.tryParse(lastSyncTimeStr); // 
+fallback for older ISO formats
+lib\presentation\blocs\sync\sync_cubit.dart:115:      // If previously logged in, emit synced state early with cached 
+email
+lib\presentation\blocs\sync\sync_cubit.dart:118:          status: SyncStatus.synced,
+lib\presentation\blocs\sync\sync_cubit.dart:120:          lastSync: parsedSyncTime,
+lib\presentation\blocs\sync\sync_cubit.dart:125:          lastSync: parsedSyncTime,
+lib\presentation\blocs\sync\sync_cubit.dart:133:      // If auto-sync is enabled and user is signed in, trigger a 
+background sync
+lib\presentation\blocs\sync\sync_cubit.dart:134:      if (state.status != SyncStatus.signedOut && state.autoSync) {
+lib\presentation\blocs\sync\sync_cubit.dart:135:        await performAutoSync();
+lib\presentation\blocs\sync\sync_cubit.dart:138:      debugPrint('SyncCubit initialization error: $e');
+lib\presentation\blocs\sync\sync_cubit.dart:139:      emit(state.copyWith(lastSync: null, driveFiles: 0));
+lib\presentation\blocs\sync\sync_cubit.dart:143:  Future<void> signIn() async {
+lib\presentation\blocs\sync\sync_cubit.dart:145:      final user = await _syncService.signIn();
+lib\presentation\blocs\sync\sync_cubit.dart:154:  Future<void> signOut() async {
+lib\presentation\blocs\sync\sync_cubit.dart:159:      await _syncService.signOut();
+lib\presentation\blocs\sync\sync_cubit.dart:165:  Future<void> backupNow() async {
+lib\presentation\blocs\sync\sync_cubit.dart:166:    if (_isSyncing) return;
+lib\presentation\blocs\sync\sync_cubit.dart:167:    _isSyncing = true;
+lib\presentation\blocs\sync\sync_cubit.dart:169:    emit(state.copyWith(status: SyncStatus.pending));
+lib\presentation\blocs\sync\sync_cubit.dart:171:      await _syncService.uploadBackupToDrive();
+lib\presentation\blocs\sync\sync_cubit.dart:174:      _updateLocalCounts(); // This recalculates totalSyncedCount
+lib\presentation\blocs\sync\sync_cubit.dart:178:        await configBox.put('last_sync_time', 
+now.millisecondsSinceEpoch.toString());
+lib\presentation\blocs\sync\sync_cubit.dart:181:        debugPrint('Sync settings write error: $e');
+lib\presentation\blocs\sync\sync_cubit.dart:185:        status: SyncStatus.synced,
+lib\presentation\blocs\sync\sync_cubit.dart:186:        lastSync: now,
+lib\presentation\blocs\sync\sync_cubit.dart:190:        status: SyncStatus.error,
+lib\presentation\blocs\sync\sync_cubit.dart:194:      _isSyncing = false;
+lib\presentation\blocs\sync\sync_cubit.dart:198:  Future<void> restoreNow() async {
+lib\presentation\blocs\sync\sync_cubit.dart:199:    if (_isSyncing) return;
+lib\presentation\blocs\sync\sync_cubit.dart:200:    _isSyncing = true;
+lib\presentation\blocs\sync\sync_cubit.dart:202:    emit(state.copyWith(status: SyncStatus.pending));
+lib\presentation\blocs\sync\sync_cubit.dart:204:      await _syncService.restoreBackupFromDrive();
+lib\presentation\blocs\sync\sync_cubit.dart:211:        await configBox.put('last_sync_time', 
+now.millisecondsSinceEpoch.toString());
+lib\presentation\blocs\sync\sync_cubit.dart:214:        debugPrint('Sync settings write error: $e');
+lib\presentation\blocs\sync\sync_cubit.dart:218:        status: SyncStatus.synced,
+lib\presentation\blocs\sync\sync_cubit.dart:219:        lastSync: now,
+lib\presentation\blocs\sync\sync_cubit.dart:223:        status: SyncStatus.error,
+lib\presentation\blocs\sync\sync_cubit.dart:227:      _isSyncing = false;
+lib\presentation\blocs\sync\sync_cubit.dart:231:  Future<void> performAutoSync() async {
+lib\presentation\blocs\sync\sync_cubit.dart:232:    if (state.status == SyncStatus.signedOut || !state.autoSync) 
+return;
+lib\presentation\blocs\sync\sync_cubit.dart:236:  Future<void> syncNow() async {
+lib\presentation\blocs\sync\sync_cubit.dart:237:    if (state.status == SyncStatus.signedOut) return;
+lib\presentation\blocs\sync\sync_cubit.dart:241:  void toggleAutoSync(bool value) {
+lib\presentation\blocs\sync\sync_cubit.dart:242:    emit(state.copyWith(autoSync: value));
+lib\presentation\blocs\sync\sync_cubit.dart:245:  void toggleOfflineSync(bool value) {
+lib\presentation\blocs\sync\sync_cubit.dart:246:    emit(state.copyWith(offlineSync: value));
+lib\presentation\blocs\sync\sync_cubit.dart:251:      status: SyncStatus.pending,
+lib\presentation\blocs\sync\sync_state.dart:3:enum SyncStatus { signedOut, synced, pending, error }
+lib\presentation\blocs\sync\sync_state.dart:5:class SyncState extends Equatable {
+lib\presentation\blocs\sync\sync_state.dart:6:  final SyncStatus status;
+lib\presentation\blocs\sync\sync_state.dart:9:  final DateTime? lastSync;
+lib\presentation\blocs\sync\sync_state.dart:13:  final bool autoSync;
+lib\presentation\blocs\sync\sync_state.dart:14:  final bool offlineSync;
+lib\presentation\blocs\sync\sync_state.dart:19:  const SyncState({
+lib\presentation\blocs\sync\sync_state.dart:20:    this.status = SyncStatus.signedOut,
+lib\presentation\blocs\sync\sync_state.dart:24:    this.lastSync,
+lib\presentation\blocs\sync\sync_state.dart:28:    this.autoSync = true,
+lib\presentation\blocs\sync\sync_state.dart:29:    this.offlineSync = true,
+lib\presentation\blocs\sync\sync_state.dart:33:  SyncState copyWith({
+lib\presentation\blocs\sync\sync_state.dart:34:    SyncStatus? status,
+lib\presentation\blocs\sync\sync_state.dart:38:    DateTime? lastSync,
+lib\presentation\blocs\sync\sync_state.dart:42:    bool? autoSync,
+lib\presentation\blocs\sync\sync_state.dart:43:    bool? offlineSync,
+lib\presentation\blocs\sync\sync_state.dart:46:    return SyncState(
+lib\presentation\blocs\sync\sync_state.dart:51:      lastSync: lastSync ?? this.lastSync,
+lib\presentation\blocs\sync\sync_state.dart:55:      autoSync: autoSync ?? this.autoSync,
+lib\presentation\blocs\sync\sync_state.dart:56:      offlineSync: offlineSync ?? this.offlineSync,
+lib\presentation\blocs\sync\sync_state.dart:67:        lastSync,
+lib\presentation\blocs\sync\sync_state.dart:71:        autoSync,
+lib\presentation\blocs\sync\sync_state.dart:72:        offlineSync,
+lib\presentation\blocs\theme\theme_cubit.dart:10:  Future<void> loadFromPrefs() async {
+lib\presentation\blocs\theme\theme_cubit.dart:15:  Future<void> toggleTheme(bool isDarkMode) async {
+lib\presentation\screens\create_file\create_file_screen.dart:8:import 
+'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+lib\presentation\screens\create_file\create_file_screen.dart:76:          _performSecureSaveAndSync(isManualSave: 
+false);
+lib\presentation\screens\create_file\create_file_screen.dart:122:Future<void> _performSecureSaveAndSync({required bool 
+isManualSave}) async {
+lib\presentation\screens\create_file\create_file_screen.dart:173:      // If autosync is enabled and this is a manual 
+save, trigger a single file upload to Google Drive.
+lib\presentation\screens\create_file\create_file_screen.dart:175:      final bool isAutoSyncEnabled = 
+(configBox.get('auto_sync', defaultValue: false) as bool);
+lib\presentation\screens\create_file\create_file_screen.dart:176:      if (isAutoSyncEnabled) {
+lib\presentation\screens\create_file\create_file_screen.dart:177:        await context.read<SyncCubit>().syncNow();
+lib\presentation\screens\create_file\create_file_screen.dart:198:    // Force a final synchronous save to ensure all 
+data is persisted and synced
+lib\presentation\screens\create_file\create_file_screen.dart:199:    _performSecureSaveAndSync(isManualSave: false);
+lib\presentation\screens\create_file\create_file_screen.dart:223:  Future<void> _saveFile() async {
+lib\presentation\screens\create_file\create_file_screen.dart:332:      onWillPop: () async {
+lib\presentation\screens\create_file\create_file_screen.dart:333:        await _performSecureSaveAndSync(isManualSave: 
+false);
+lib\presentation\screens\create_file\create_file_screen.dart:538:            onPressed: (isSaveDisabled || _isLoading) 
+? null : () async => await _performSecureSaveAndSync(isManualSave: true),
+lib\presentation\screens\editor\note_editor_screen.dart:45:  void _exportCurrentNote() async {
+lib\presentation\screens\editor\note_editor_screen.dart:56:  Future<void> _saveNote() async {
+lib\presentation\screens\folder_detail\widgets\file_card.dart:34:            onPressed: () async {
+lib\presentation\screens\folder_detail\folder_detail_screen.dart:245:                  onTap: () async {
+lib\presentation\screens\home\widgets\create_bottom_sheet.dart:53:                onTap: () async {
+lib\presentation\screens\home\widgets\empty_vault_view.dart:142:          _buildChip(context, 'Folder', 
+Icons.folder_outlined, () async {
+lib\presentation\screens\home\widgets\folder_card.dart:36:            onPressed: () async {
+lib\presentation\screens\home\widgets\folder_card.dart:50:  Future<void> _showEditDialog(BuildContext context) async {
+lib\presentation\screens\home\widgets\folder_card.dart:166:            onTap: () async {
+lib\presentation\screens\home\widgets\vault_search_delegate.dart:80:  Future<List<SearchResult>> _performSearch(String 
+q) async {
+lib\presentation\screens\note_reader\read_note_screen.dart:43:  List<String> _syncedSearchTokens = [];
+lib\presentation\screens\note_reader\read_note_screen.dart:44:  Map<String, Color> _syncedWordColorMap = {};
+lib\presentation\screens\note_reader\read_note_screen.dart:63:      // Synchronize exact case-insensitive map 
+structure passed down from the search pool context
+lib\presentation\screens\note_reader\read_note_screen.dart:73:      _syncedWordColorMap = orderedMap;
+lib\presentation\screens\note_reader\read_note_screen.dart:74:      _syncedSearchTokens = orderedMap.keys.toList();
+lib\presentation\screens\note_reader\read_note_screen.dart:77:    if (_syncedSearchTokens.isNotEmpty) {
+lib\presentation\screens\note_reader\read_note_screen.dart:78:      _totalMatches = 
+_countTotalMatches(_currentFile.title, _syncedSearchTokens) +
+lib\presentation\screens\note_reader\read_note_screen.dart:79:          _countTotalMatches(_currentFile.description, 
+_syncedSearchTokens);
+lib\presentation\screens\note_reader\read_note_screen.dart:84:  Future<void> _preCacheUrduFonts() async {
+lib\presentation\screens\note_reader\read_note_screen.dart:112:    if (_syncedSearchTokens.isEmpty) return;
+lib\presentation\screens\note_reader\read_note_screen.dart:113:    for (int wi = 0; wi < _syncedSearchTokens.length; 
+wi++) {
+lib\presentation\screens\note_reader\read_note_screen.dart:114:      final word = 
+_syncedSearchTokens[wi].toLowerCase();
+lib\presentation\screens\note_reader\read_note_screen.dart:198:      _syncedSearchTokens = [];
+lib\presentation\screens\note_reader\read_note_screen.dart:199:      _syncedWordColorMap = {};
+lib\presentation\screens\note_reader\read_note_screen.dart:203:  Widget _buildSyncedMultiHighlight({
+lib\presentation\screens\note_reader\read_note_screen.dart:209:    if (_syncedSearchTokens.isEmpty || 
+_syncedWordColorMap.isEmpty) {
+lib\presentation\screens\note_reader\read_note_screen.dart:219:      for (final token in _syncedSearchTokens) {
+lib\presentation\screens\note_reader\read_note_screen.dart:235:      final color = _syncedWordColorMap[matchedToken] 
+?? Colors.yellow;
+lib\presentation\screens\note_reader\read_note_screen.dart:252:  Future<Uint8List> _buildFallbackPdf(VaultFile 
+currentFile) async {
+lib\presentation\screens\note_reader\read_note_screen.dart:273:  Future<Uint8List> generatePdfReport(PdfPageFormat 
+format, VaultFile currentFile) async {
+lib\presentation\screens\note_reader\read_note_screen.dart:387:  Future<void> _handlePrint(VaultFile currentFile) 
+async {
+lib\presentation\screens\note_reader\read_note_screen.dart:397:      onLayout: (PdfPageFormat format) async {
+lib\presentation\screens\note_reader\read_note_screen.dart:529:  Future<void> _exportNote(String format) async {
+lib\presentation\screens\note_reader\read_note_screen.dart:614:            title: _buildSyncedMultiHighlight(
+lib\presentation\screens\note_reader\read_note_screen.dart:651:                  _buildSyncedMultiHighlight(
+lib\presentation\screens\note_reader\read_note_screen.dart:660:                  _buildSyncedMultiHighlight(
+lib\presentation\screens\search\search_screen.dart:381:  Future<void> _performSearch(String query) async {
+lib\presentation\screens\search\search_screen.dart:436:  Future<List<VaultFile>> _getAllNotes() async {
+lib\presentation\screens\settings\app_guide_screen.dart:122:            "in karein. Auto sync on hone ke baad har "
+lib\presentation\screens\settings\settings_screen.dart:5:import 
+'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+lib\presentation\screens\settings\settings_screen.dart:6:import 
+'package:notepad_pro/presentation/blocs/sync/sync_state.dart';
+lib\presentation\screens\settings\settings_screen.dart:42:      body: BlocBuilder<SyncCubit, SyncState>(
+lib\presentation\screens\settings\settings_screen.dart:50:              if (state.status == SyncStatus.signedOut)
+lib\presentation\screens\settings\settings_screen.dart:55:              if (state.status == SyncStatus.signedOut)
+lib\presentation\screens\settings\settings_screen.dart:63:              if (state.status != SyncStatus.signedOut) ...[
+lib\presentation\screens\settings\settings_screen.dart:65:                _buildSectionLabel("SYNC SETTINGS"),
+lib\presentation\screens\settings\settings_screen.dart:67:                _buildSyncSettingsCard(context, state),
+lib\presentation\screens\settings\settings_screen.dart:161:            "Aapka data Google Drive mein safe rahega. 
+Kabhi bhi sync band kar sakte hain.",
+lib\presentation\screens\settings\settings_screen.dart:167:            onTap: () => context.read<SyncCubit>().signIn(),
+lib\presentation\screens\settings\settings_screen.dart:208:  Widget _buildAccountCard(BuildContext context, SyncState 
+state) {
+lib\presentation\screens\settings\settings_screen.dart:209:    final isPending = state.status == SyncStatus.pending;
+lib\presentation\screens\settings\settings_screen.dart:210:    final isError = state.status == SyncStatus.error;
+lib\presentation\screens\settings\settings_screen.dart:262:            _buildErrorBanner(state.errorMessage ?? "Sync 
+failed. Please try again."),
+lib\presentation\screens\settings\settings_screen.dart:278:                  ? "${state.totalFiles - state.driveFiles} 
+files waiting to sync"
+lib\presentation\screens\settings\settings_screen.dart:279:                  : (isError ? "Sync Error" : "Last sync: 
+${_formatDate(state.lastSync)}"),
+lib\presentation\screens\settings\settings_screen.dart:314:                  onPressed: () => 
+context.read<SyncCubit>().syncNow(),
+lib\presentation\screens\settings\settings_screen.dart:378:                      
+context.read<SyncCubit>().restoreNow();
+lib\presentation\screens\settings\settings_screen.dart:411:  Widget _buildStatusBadge(SyncStatus status) {
+lib\presentation\screens\settings\settings_screen.dart:412:    final isPending = status == SyncStatus.pending;
+lib\presentation\screens\settings\settings_screen.dart:413:    final isError = status == SyncStatus.error;
+lib\presentation\screens\settings\settings_screen.dart:430:            isPending ? "Pending" : (isError ? "Error" : 
+"Synced"),
+lib\presentation\screens\settings\settings_screen.dart:520:  Widget _buildSyncSettingsCard(BuildContext context, 
+SyncState state) {
+lib\presentation\screens\settings\settings_screen.dart:531:            title: "Auto sync",
+lib\presentation\screens\settings\settings_screen.dart:533:            value: state.autoSync,
+lib\presentation\screens\settings\settings_screen.dart:534:            onChanged: (val) => 
+context.read<SyncCubit>().toggleAutoSync(val),
+lib\presentation\screens\settings\settings_screen.dart:539:            title: "Offline notes sync on connect",
+lib\presentation\screens\settings\settings_screen.dart:541:            value: state.offlineSync,
+lib\presentation\screens\settings\settings_screen.dart:542:            onChanged: (val) => 
+context.read<SyncCubit>().toggleOfflineSync(val),
+lib\presentation\screens\settings\settings_screen.dart:728:  void _showSignOutConfirmation(BuildContext context, 
+SyncState state) {
+lib\presentation\screens\settings\settings_screen.dart:771:                      context.read<SyncCubit>().signOut();
+lib\presentation\screens\privacy_policy_screen.dart:98:                  "Google Sign In & Drive Sync",
+lib\presentation\screens\privacy_policy_screen.dart:161:                        "2. Google Sign In & Drive Sync",
+lib\presentation\screens\privacy_policy_screen.dart:210:                _buildBullet("Offline notes", " internet 
+connect hone pe automatically sync hote hain"),
+lib\presentation\screens\privacy_policy_screen.dart:241:                      
+_buildControlRow(Icons.toggle_on_outlined, "Settings se kabhi bhi sync band karein"),
+lib\presentation\screens\privacy_policy_screen.dart:242:                      _buildControlRow(Icons.logout_outlined, 
+"Sign out karne se Drive sync ruk jata hai"),
+lib\presentation\screens\privacy_policy_screen.dart:338:                    "Google Drive sync optional hai. Sign in 
+na karein to data 100% local rehta hai.",
+lib\presentation\screens\splash_screen.dart:31:      vsync: this,
+lib\presentation\widgets\cards\file_card.dart:29:            onPressed: () async {
+lib\presentation\widgets\cards\folder_card.dart:34:            onPressed: () async {
+lib\presentation\widgets\cards\folder_card.dart:48:  Future<void> _showEditDialog(BuildContext context) async {
+lib\presentation\widgets\cards\folder_card.dart:191:                    onTap: () async {
+lib\services\auth\auth_service.dart:15:  Future<GoogleSignInAccount?> signInSilently() async {
+lib\services\auth\auth_service.dart:24:  Future<GoogleSignInAccount?> signInWithGoogle() async {
+lib\services\auth\auth_service.dart:32:  Future<void> signOut() async {
+lib\services\connectivity_service.dart:2:import 'dart:async';
+lib\services\connectivity_service.dart:21:  Future<ConnectionStatus> checkInitialConnectivity() async {
+lib\services\export_service.dart:8:  static Future<void> exportAsTxt(VaultFile file) async {
+lib\services\export_service.dart:32:  static Future<String?> exportAsDocx(VaultFile file) async {
+lib\services\google_drive_sync_service.dart:1:import 'dart:async';
+lib\services\google_drive_sync_service.dart:15:/// A robust, production-ready Google Drive Sync Service for Hive.
+lib\services\google_drive_sync_service.dart:16:/// Implements deep hierarchical folder sync and structural restore 
+mechanisms.
+lib\services\google_drive_sync_service.dart:17:class GoogleDriveSyncService {
+lib\services\google_drive_sync_service.dart:26:  GoogleDriveSyncService(this._authService, this._hiveService);
+lib\services\google_drive_sync_service.dart:33:  Future<ga.DriveApi?> _getDriveApi() async {
+lib\services\google_drive_sync_service.dart:47:  Future<void> uploadBackupToDrive() async {
+lib\services\google_drive_sync_service.dart:50:      debugPrint('[DriveSync] Starting hierarchical backup...');
+lib\services\google_drive_sync_service.dart:69:      Future<String> syncFolder(FolderModel folder) async {
+lib\services\google_drive_sync_service.dart:76:            parentDriveId = await syncFolder(parentFolder);
+lib\services\google_drive_sync_service.dart:86:          await _hiveService.updateFolder(folder.copyWith(driveFileId: 
+driveId, isSynced: true));
+lib\services\google_drive_sync_service.dart:92:        await syncFolder(localFolders[i]);
+lib\services\google_drive_sync_service.dart:95:      debugPrint('[DriveSync] Folder hierarchy synced.');
+lib\services\google_drive_sync_service.dart:97:      // D. Content Sync (Notes and Files)
+lib\services\google_drive_sync_service.dart:121:          final updatedNote = note.copyWith(driveFileId: driveId, 
+isSynced: true);
+lib\services\google_drive_sync_service.dart:132:          final updatedFile = file.copyWith(driveFileId: driveId, 
+isSynced: true);
+lib\services\google_drive_sync_service.dart:140:      debugPrint('[DriveSync] Backup completed successfully.');
+lib\services\google_drive_sync_service.dart:142:      debugPrint('[DriveSync] Backup Error: $e');
+lib\services\google_drive_sync_service.dart:147:  Future<String> _uploadJsonFile(ga.DriveApi api, String name, 
+Map<String, dynamic> data, String parentId) async {
+lib\services\google_drive_sync_service.dart:170:  Future<void> restoreBackupFromDrive({VoidCallback? onComplete}) 
+async {
+lib\services\google_drive_sync_service.dart:173:      debugPrint('[DriveSync] Starting structural restoration...');
+lib\services\google_drive_sync_service.dart:181:      debugPrint('[DriveSync] Local state wiped.');
+lib\services\google_drive_sync_service.dart:194:      Future<void> buildTree(String currentDriveId, String? 
+currentLocalParentId) async {
+lib\services\google_drive_sync_service.dart:213:                isSynced: true,
+lib\services\google_drive_sync_service.dart:216:              debugPrint('[DriveSync] Failed to parse folder metadata 
+for ${driveFolder.name}: $e');
+lib\services\google_drive_sync_service.dart:223:                isSynced: true,
+lib\services\google_drive_sync_service.dart:234:              isSynced: true,
+lib\services\google_drive_sync_service.dart:248:      debugPrint('[DriveSync] Folder hierarchy restored.');
+lib\services\google_drive_sync_service.dart:272:                isSynced: true,
+lib\services\google_drive_sync_service.dart:279:                isSynced: true,
+lib\services\google_drive_sync_service.dart:284:            debugPrint('[DriveSync] Skipped corrupt file ${file.name}: 
+$e');
+lib\services\google_drive_sync_service.dart:296:      debugPrint('[DriveSync] Full restoration complete.');
+lib\services\google_drive_sync_service.dart:298:      debugPrint('[DriveSync] Restore Error: $e');
+lib\services\google_drive_sync_service.dart:307:  Future<String> _getOrCreateDriveFolder(ga.DriveApi api, String name, 
+{String? parentId, String? description}) async {
+lib\services\google_drive_sync_service.dart:328:  Future<ga.File?> _findDriveFolderFull(ga.DriveApi api, String name, 
+{String? parentId}) async {
+lib\services\google_drive_sync_service.dart:335:  Future<String?> _findDriveFolder(ga.DriveApi api, String name, 
+{String? parentId}) async {
+lib\services\google_drive_sync_service.dart:342:  Future<String?> _findDriveFile(ga.DriveApi api, String name, 
+{String? parentId}) async {
+lib\services\google_drive_sync_service.dart:349:  Future<List<ga.File>> _listAllFolders(ga.DriveApi api) async {
+lib\services\google_drive_sync_service.dart:358:  Future<List<ga.File>> _listAllJsonFiles(ga.DriveApi api) async {
+lib\services\google_drive_sync_service.dart:367:  Future<Map<String, dynamic>> _downloadJson(ga.DriveApi api, String 
+fileId) async {
+lib\services\hive_service.dart:35:  Future<void> setInitialized(bool value) async {
+lib\services\hive_service.dart:44:  Future<void> setManualRestorePerformed(bool value) async {
+lib\services\hive_service.dart:50:  Future<void> addFolder(FolderModel folderModel) async {
+lib\services\hive_service.dart:55:  Future<List<FolderModel>> getFolders() async {
+lib\services\hive_service.dart:59:  Future<FolderModel?> getFolder(String id) async {
+lib\services\hive_service.dart:63:  Future<void> updateFolder(FolderModel folderModel) async {
+lib\services\hive_service.dart:68:  Future<void> deleteFolder(String id) async {
+lib\services\hive_service.dart:74:  Future<void> addNote(NoteModel noteModel) async {
+lib\services\hive_service.dart:79:  Future<List<NoteModel>> getNotes() async {
+lib\services\hive_service.dart:83:  Future<NoteModel?> getNote(String id) async {
+lib\services\hive_service.dart:87:  Future<void> updateNote(NoteModel noteModel) async {
+lib\services\hive_service.dart:92:  Future<void> deleteNote(String id) async {
+lib\services\hive_service.dart:98:  Future<void> addFile(VaultFileModel fileModel) async {
+lib\services\hive_service.dart:103:  Future<List<VaultFileModel>> getFiles() async {
+lib\services\hive_service.dart:107:  Future<VaultFileModel?> getFile(String id) async {
+lib\services\hive_service.dart:111:  Future<void> updateFile(VaultFileModel fileModel) async {
+lib\services\hive_service.dart:116:  Future<void> deleteFile(String id) async {
+lib\services\hive_service.dart:121:  // Unsynced data retrieval
+lib\services\hive_service.dart:122:  List<FolderModel> getUnsyncedFolders() => _folderBox.values.where((f) => 
+!f.isSynced).toList();
+lib\services\hive_service.dart:123:  List<NoteModel> getUnsyncedNotes() => _noteBox.values.where((n) => 
+!n.isSynced).toList();
+lib\services\hive_service.dart:124:  List<VaultFileModel> getUnsyncedFiles() => _fileBox.values.where((f) => 
+!f.isSynced).toList();
+lib\services\hive_service.dart:127:  Future<void> clearAllData() async {
+lib\services\hive_service.dart:141:  }) async {
+lib\services\pdf_service.dart:35:  }) async {
+lib\services\pdf_service.dart:146:      BuildContext context, VaultFile item) async {
+lib\services\pdf_service.dart:187:        onLayout: (_) async => pdfBytes,
+lib\services\sync_service.dart:1:import 'dart:async';
+lib\services\sync_service.dart:14:/// A flawless, production-ready Google Drive Sync Service for Hive.
+lib\services\sync_service.dart:17:class GoogleDriveSyncService {
+lib\services\sync_service.dart:27:  GoogleDriveSyncService(this._authService, this._hiveService);
+lib\services\sync_service.dart:39:  Future<ga.DriveApi?> _getDriveApi() async {
+lib\services\sync_service.dart:53:  Future<void> uploadBackupToDrive() async {
+lib\services\sync_service.dart:56:      debugPrint('[DriveSync] Starting backup sequence...');
+lib\services\sync_service.dart:68:      debugPrint('[DriveSync] App Root Folder: $appRootFolderId');
+lib\services\sync_service.dart:74:      debugPrint('[DriveSync] Uncategorized Folder: $uncategorizedFolderId');
+lib\services\sync_service.dart:85:      debugPrint('[DriveSync] Syncing folder hierarchy...');
+lib\services\sync_service.dart:87:      Future<String> syncFolder(FolderModel folder) async {
+lib\services\sync_service.dart:98:            parentDriveId = await syncFolder(parentFolder);
+lib\services\sync_service.dart:108:      // COMPLETELY finish folder sync before notes
+lib\services\sync_service.dart:110:        await syncFolder(localFolders[i]);
+lib\services\sync_service.dart:115:      debugPrint('[DriveSync] Folder mapping finished. Count: 
+${localToDriveFolderMap.length}');
+lib\services\sync_service.dart:118:      debugPrint('[DriveSync] Syncing notes...');
+lib\services\sync_service.dart:157:          debugPrint('[DriveSync] Updated: ${driveFile.name}');
+lib\services\sync_service.dart:160:          debugPrint('[DriveSync] Created: ${driveFile.name}');
+lib\services\sync_service.dart:169:      debugPrint('[DriveSync] Backup completed successfully.');
+lib\services\sync_service.dart:171:      debugPrint('[DriveSync] Backup Error: $e');
+lib\services\sync_service.dart:180:  Future<void> restoreBackupFromDrive({VoidCallback? onComplete}) async {
+lib\services\sync_service.dart:183:      debugPrint('[DriveSync] Initializing restoration...');
+lib\services\sync_service.dart:202:      debugPrint('[DriveSync] Local state cleared for fresh restore.');
+lib\services\sync_service.dart:217:      Future<void> reconstructFolders(String currentDriveId, String? localParentId) 
+async {
+lib\services\sync_service.dart:232:              isSynced: true,
+lib\services\sync_service.dart:244:      debugPrint('[DriveSync] Local folder tree reconstructed.');
+lib\services\sync_service.dart:248:      debugPrint('[DriveSync] Querying JSON files from Drive...');
+lib\services\sync_service.dart:292:            isSynced: true,
+lib\services\sync_service.dart:297:          debugPrint('[DriveSync] Restored: ${file.name}');
+lib\services\sync_service.dart:299:          debugPrint('[DriveSync] Failed note restoration (${file.name}): $e');
+lib\services\sync_service.dart:313:      debugPrint('[DriveSync] Full restoration complete.');
+lib\services\sync_service.dart:315:      debugPrint('[DriveSync] Restore Error: $e');
+lib\services\sync_service.dart:325:      {String? parentId}) async {
+lib\services\sync_service.dart:339:      {String? parentId}) async {
+lib\services\sync_service.dart:350:  Future<List<int>> _readAllBytes(Stream<List<int>> stream) async {
+lib\app.dart:8:import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart'; // Import SyncCubit
+lib\app.dart:26:        BlocProvider<SyncCubit>(create: (context) => sl<SyncCubit>()), // Add SyncCubit
+lib\main.dart:1:import 'dart:async';
+lib\main.dart:12:void main() async {
+lib\main.dart:101:) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:16:    
+setUpAll(() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:20:    
+testWidgets('test connectivity result', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:26:    
+    (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:35:    
+    (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:44:    
+    (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:51:    
+    (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:7:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:64:  // Platform messages are 
+asynchronous, so we initialize in an async method.
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:65:  Future<void> initConnectivity() 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:75:    // If the widget was removed 
+from the tree while the asynchronous platform
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:85:  Future<void> 
+_updateConnectionStatus(List<ConnectivityResult> result) async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\web\dart_html_connectivity_plugin.dart:1:import 
+'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\web\dart_html_connectivity_plugin.dart:12:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:1:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:22:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:71:  Future<void> 
+_startListenConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:86:  Future<void> 
+_stopListenConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\connectivity_plus.dart:5:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:17:  
+test('bluetooth', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:32:  
+test('ethernet', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:47:  
+test('wireless', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:62:  test('vpn', () 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:77:  
+test('wireless+vpn', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:92:  test('no 
+connectivity', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.mocks.dart:5:import 
+'dart:async' as _i3;
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:24:    setUp(() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:30:    
+test('checkConnectivity', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:35:    test('checkConnectivity 
+passes through satellite', () async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:52:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:61:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+linux\flutter\ephemeral\.plugin_symlinks\open_file_linux\lib\open_file_linux.dart:26:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\open_file_linux\test\open_file_linux_test.dart:6:    test('open file on linux 
+when filePath is empty', ()async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:13:  
+testWidgets('getTemporaryDirectory', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:19:  
+testWidgets('getDownloadDirectory', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:28:  
+testWidgets('getApplicationDocumentsDirectory', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:34:  
+testWidgets('getApplicationSupportDirectory', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:40:  
+testWidgets('getApplicationCacheDirectory', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:57:  if 
+(file.existsSync()) {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:58:    
+file.deleteSync();
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:59:    
+expect(file.existsSync(), isFalse);
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:62:  
+file.writeAsStringSync('Hello world!');
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:63:  
+expect(file.readAsStringSync(), 'Hello world!');
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:64:  
+expect(directory.listSync(), isNotEmpty);
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\integration_test\path_provider_test.dart:65:  
+file.deleteSync();
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\lib\main.dart:36:  // Platform messages are 
+asynchronous, so we initialize in an async method.
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\lib\main.dart:37:  Future<void> initDirectories() 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\example\lib\main.dart:72:    // If the widget was removed 
+from the tree while the asynchronous platform
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:49:  Future<String?> 
+getApplicationSupportPath() async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:52:    if 
+(directory.existsSync()) {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:60:    if 
+(legacyDirectory.existsSync()) {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:75:  Future<String?> 
+getApplicationCachePath() async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:78:    if 
+(!directory.existsSync()) {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:90:  Future<String> 
+_getExecutableName() async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\lib\src\path_provider_linux.dart:97:  Future<String> 
+_getId() async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:17:  
+test('getTemporaryPath defaults to TMPDIR', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:24:  
+test('getTemporaryPath uses fallback if TMPDIR is empty', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:31:  
+test('getTemporaryPath uses fallback if TMPDIR is unset', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:38:  
+test('getApplicationSupportPath', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:48:      () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:55:  
+test('getApplicationDocumentsPath', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:60:  
+test('getApplicationCachePath', () async {
+linux\flutter\ephemeral\.plugin_symlinks\path_provider_linux\test\path_provider_linux_test.dart:67:  
+test('getDownloadsPath', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\example\lib\main.dart:10:Future<void> main() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\example\lib\main.dart:29:  Future<Uint8List> 
+_generatePdf(PdfPageFormat format, String title) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:45:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:5949:/// - syncopateRegular (Syncopate 
+regular)
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:5950:/// - syncopateBold (Syncopate 700)
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65785:  /// Syncopate regular
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65786:  static Future<Font> 
+syncopateRegular() {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65788:      
+'https://fonts.gstatic.com/s/syncopate/v21/pe0sMIuPIYBCpEV5eFdyAv2-C99ycg.ttf',
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65789:      'Syncopate-Regular',
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65795:  /// Syncopate 700
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65796:  static Future<Font> 
+syncopateBold() {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65798:      
+'https://fonts.gstatic.com/s/syncopate/v21/pe0pMIuPIYBCpEV5eFdKvtKaA_Rue1UwVg.ttf',
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65799:      'Syncopate-Bold',
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:33:  static Future<bool> contains(String 
+key) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:74:  Future<void> pressed(BuildContext 
+context) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:121:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:140:        collector = () sync* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:204:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:97:  Future<void> _raster() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:133:        collector = () sync* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:212:        collector = () sync* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:32:}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:38:    (rdr.ImageInfo image, bool sync) 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:77:}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:91:}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:110:}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:47:  Future<Uint8List?> _download(Uri uri, 
+{Map<String, String>? headers}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:62:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:96:  Future<void> add(String key, Uint8List 
+bytes) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:102:  Future<Uint8List?> get(String key) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:108:  Future<void> clear() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:113:  Future<bool> contains(String key) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:118:  Future<void> remove(String key) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:52:  static Future<dynamic> 
+_handleMethod(MethodCall call) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:75:            collector = () sync* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:154:  Future<PrintingInfo> info() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:183:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:214:  Future<List<Printer>> 
+listPrinters() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:231:  Future<Printer?> pickPrinter(Rect 
+bounds) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:256:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:276:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:28:  Future<void> wait() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:34:  Future<void> acquire() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:90:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:45:  Future<Uint8List> toPng() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:60:  Future<ImageInfo> _loadAsync() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:67:    return 
+OneFrameImageStreamCompleter(_loadAsync());
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:71:  Future<PdfRaster> 
+obtainKey(ImageConfiguration configuration) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:36:Future<void> pdfDefaultTheme() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:17:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:69:  Future<void> _initPlugin() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:111:        ..async = true
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:143:  Future<PrintingInfo> info() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:162:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:170:        collector = () sync* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:268:      // If print() is synchronous
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:287:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:291:  Future<bool> _getPdf(Uint8List bytes, 
+{String? filename}) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:334:  ) async* {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:422:  Future<Image> toImage() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:429:  Future<Uint8List> toPng() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:35:        
+.setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:47:  test('flutterImageProvider(FileImage)', 
+() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:63:    final fontData = 
+File('$path/../pdf/open-sans.ttf').readAsBytesSync();
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:68:  tearDownAll(() async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:23:  test('PrintingInfo', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:36:  test('PrintingInfo.fromMap', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:34:  test('info', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:39:  test('layoutPdf', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:50:  test('sharePdf', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:54:  test('pickPrinter', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:58:  test('directPrintPdf', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:68:  test('raster', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:72:  test('test image', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:90:  Future<PrintingInfo> info() async => 
+PrintingInfo.unavailable;
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:102:  ) async => true;
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:112:  ) async => true;
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:115:  Future<Printer?> pickPrinter(Rect 
+bounds) async => null;
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:122:  ) async* {}
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:27:  test('PdfRaster', () async {
+linux\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:38:  testWidgets('PdfRasterImage', 
+(WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:14:  
+testWidgets('Can launch share', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:19:  
+testWidgets('Can launch shareUri', (WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:25:      
+(WidgetTester tester) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:114:                onPressed: () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:207:  void _onShareWithResult(BuildContext 
+context) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:245:  void 
+_onShareXFileFromAssets(BuildContext context) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:269:  void _onShareTextAsXFile(BuildContext 
+context) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\test_driver\share_plus_test.dart:5:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\example\test_driver\share_plus_test.dart:10:Future<void> main() 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_linux.dart:27:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_linux.dart:38:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:36:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:80:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:164:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:260:  ) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:282:  static Future<File> 
+_fromXFile(XFile file, {String? nameOverride}) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_windows.dart:32:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_windows.dart:43:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:5:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:43:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:89:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:132:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:12:  test('url encoding is correct 
+for &', () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:21:  test('url encoding is correct 
+for spaces', () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:29:  test('throws when 
+url_launcher can\'t launch uri', () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:33:    expect(() async => await 
+SharePlusLinuxPlugin(mock).share('foo bar'),
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:32:    () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:45:    () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:57:    () async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:61:      expect(() async => 
+await SharePlusWindowsPlugin(mock).share('foo bar'),
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\url_launcher_mock.dart:12:  Future<bool> canLaunch(String 
+url) async {
+linux\flutter\ephemeral\.plugin_symlinks\share_plus\test\url_launcher_mock.dart:26:  }) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\example\integration_test\url_launcher_test.dart:12:  
+testWidgets('canLaunch', (WidgetTester _) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\example\lib\main.dart:7:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\example\lib\main.dart:39:  Future<void> 
+_launchInBrowser(String url) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\example\lib\main.dart:55:  Widget 
+_launchStatus(BuildContext context, AsyncSnapshot<void> snapshot) {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\src\messages.g.dart:8:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\src\messages.g.dart:60:  Future<bool> 
+canLaunchUrl(String url) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\src\messages.g.dart:93:  Future<String?> 
+launchUrl(String url) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\url_launcher_linux.dart:5:import 'dart:async';
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\url_launcher_linux.dart:31:  Future<bool> 
+canLaunch(String url) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\url_launcher_linux.dart:52:  Future<bool> 
+launchUrl(String url, LaunchOptions options) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\url_launcher_linux.dart:67:  Future<bool> 
+supportsMode(PreferredLaunchMode mode) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\lib\url_launcher_linux.dart:73:  Future<bool> 
+supportsCloseForMode(PreferredLaunchMode mode) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:18:    test('canLaunch 
+passes true', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:27:    test('canLaunch 
+passes false', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:36:    test('launch', () 
+async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:55:    test('launch 
+should throw if platform returns an error', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:82:      test('passes 
+URL', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:96:      test('throws if 
+platform returns an error', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:116:      test('returns 
+true for platformDefault', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:124:      test('returns 
+true for external application', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:132:      test('returns 
+false for other modes', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:151:    
+test('supportsCloseForMode returns false', () async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:182:  Future<bool> 
+canLaunchUrl(String url) async {
+linux\flutter\ephemeral\.plugin_symlinks\url_launcher_linux\test\url_launcher_linux_test.dart:188:  Future<String?> 
+launchUrl(String url) async {
+test\widget_test.dart:13:  setUpAll(() async {
+test\widget_test.dart:33:    await sl.allReady(); // Ensure all async singletons are ready using sl
+test\widget_test.dart:36:  tearDownAll(() async {
+test\widget_test.dart:45:  testWidgets('App starts with "Notepad Pro" text', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:16:  
+  setUpAll(() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:20:  
+  testWidgets('test connectivity result', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:26:  
+      (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:35:  
+      (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:44:  
+      (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\integration_test\connectivity_plus_test.dart:51:  
+      (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:7:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:64:  // Platform messages are 
+asynchronous, so we initialize in an async method.
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:65:  Future<void> 
+initConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:75:    // If the widget was removed 
+from the tree while the asynchronous platform
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\example\lib\main.dart:85:  Future<void> 
+_updateConnectionStatus(List<ConnectivityResult> result) async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\web\dart_html_connectivity_plugin.dart:1:import 
+'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\web\dart_html_connectivity_plugin.dart:12:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:1:import 
+'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:22:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:71:  Future<void> 
+_startListenConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\src\connectivity_plus_linux.dart:86:  Future<void> 
+_stopListenConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\lib\connectivity_plus.dart:5:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:17:  
+test('bluetooth', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:32:  
+test('ethernet', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:47:  
+test('wireless', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:62:  test('vpn', 
+() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:77:  
+test('wireless+vpn', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.dart:92:  test('no 
+connectivity', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_plus_linux_test.mocks.dart:5:import 
+'dart:async' as _i3;
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:24:    setUp(() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:30:    
+test('checkConnectivity', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:35:    
+test('checkConnectivity passes through satellite', () async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:52:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\connectivity_plus\test\connectivity_test.dart:61:  
+Future<List<ConnectivityResult>> checkConnectivity() async {
+windows\flutter\ephemeral\.plugin_symlinks\open_file_windows\lib\open_file_windows.dart:32:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\open_file_windows\test\open_file_windows_test.dart:6:    test('open file on 
+windows when filePath is empty', ()async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:13:  
+testWidgets('getTemporaryDirectory', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:19:  
+testWidgets('getApplicationDocumentsDirectory', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:25:  
+testWidgets('getApplicationSupportDirectory', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:31:  
+testWidgets('getApplicationCacheDirectory', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:37:  
+testWidgets('getDownloadsDirectory', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:54:  
+if (file.existsSync()) {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:55:  
+  file.deleteSync();
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:56:  
+  expect(file.existsSync(), isFalse);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:59:  
+file.writeAsStringSync('Hello world!');
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:60:  
+expect(file.readAsStringSync(), 'Hello world!');
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:61:  
+expect(directory.listSync(), isNotEmpty);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\integration_test\path_provider_test.dart:62:  
+file.deleteSync();
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\lib\main.dart:35:  // Platform messages are 
+asynchronous, so we initialize in an async method.
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\example\lib\main.dart:36:  Future<void> 
+initDirectories() async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_real.dart:85:  
+Future<String?> getTemporaryPath() async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_real.dart:108:      if 
+(!directory.existsSync()) {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_real.dart:250:  
+Future<String?> _createApplicationSubdirectory(String folderId) async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_real.dart:262:      if 
+(!directory.existsSync()) {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\lib\src\path_provider_windows_stub.dart:29:  
+Future<String> getPath(String folderID) async => '';
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\guid_test.dart:13:  test('has correct byte 
+representation', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\guid_test.dart:41:  test('handles alternate 
+forms', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\guid_test.dart:56:  test('throws for bad data', 
+() async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:47:  
+test('getTemporaryPath', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:52:  
+test('getApplicationSupportPath with no version info', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:63:  
+test('getApplicationSupportPath with full version info in CP1252', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:73:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:77:  
+test('getApplicationSupportPath with full version info in Unicode', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:87:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:93:      () 
+async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:106:  
+test('getApplicationSupportPath with missing company', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:115:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:119:  
+test('getApplicationSupportPath with problematic values', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:132:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:136:  
+test('getApplicationSupportPath with a completely invalid company', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:146:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:150:  
+test('getApplicationSupportPath with very long app name', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:163:  
+test('getApplicationDocumentsPath', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:170:  
+test('getApplicationCachePath', () async {
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:180:      
+expect(Directory(path).existsSync(), isTrue);
+windows\flutter\ephemeral\.plugin_symlinks\path_provider_windows\test\path_provider_windows_test.dart:184:  
+test('getDownloadsPath', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\example\lib\main.dart:10:Future<void> main() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\example\lib\main.dart:29:  Future<Uint8List> 
+_generatePdf(PdfPageFormat format, String title) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\font.dart:45:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:5949:/// - syncopateRegular (Syncopate 
+regular)
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:5950:/// - syncopateBold (Syncopate 700)
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65785:  /// Syncopate regular
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65786:  static Future<Font> 
+syncopateRegular() {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65788:      
+'https://fonts.gstatic.com/s/syncopate/v21/pe0sMIuPIYBCpEV5eFdyAv2-C99ycg.ttf',
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65789:      'Syncopate-Regular',
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65795:  /// Syncopate 700
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65796:  static Future<Font> 
+syncopateBold() {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65798:      
+'https://fonts.gstatic.com/s/syncopate/v21/pe0pMIuPIYBCpEV5eFdKvtKaA_Rue1UwVg.ttf',
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\gfonts.dart:65799:      'Syncopate-Bold',
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\fonts\manifest.dart:33:  static Future<bool> 
+contains(String key) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:74:  Future<void> 
+pressed(BuildContext context) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:121:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:140:        collector = () sync* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\actions.dart:204:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\custom.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:97:  Future<void> _raster() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:133:        collector = () sync* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\preview\raster.dart:212:        collector = () sync* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:32:}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:38:    (rdr.ImageInfo image, bool sync) 
+async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:77:}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:91:}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\asset_utils.dart:110:}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:47:  Future<Uint8List?> _download(Uri uri, 
+{Map<String, String>? headers}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:62:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:96:  Future<void> add(String key, Uint8List 
+bytes) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:102:  Future<Uint8List?> get(String key) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:108:  Future<void> clear() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:113:  Future<bool> contains(String key) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\cache.dart:118:  Future<void> remove(String key) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\callback.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\interface.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:52:  static Future<dynamic> 
+_handleMethod(MethodCall call) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:75:            collector = () sync* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:154:  Future<PrintingInfo> info() 
+async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:183:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:214:  Future<List<Printer>> 
+listPrinters() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:231:  Future<Printer?> 
+pickPrinter(Rect bounds) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:256:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\method_channel.dart:276:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:28:  Future<void> wait() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\mutex.dart:34:  Future<void> acquire() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\printing.dart:90:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\print_job.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:45:  Future<Uint8List> toPng() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:60:  Future<ImageInfo> _loadAsync() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:67:    return 
+OneFrameImageStreamCompleter(_loadAsync());
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\src\raster.dart:71:  Future<PdfRaster> 
+obtainKey(ImageConfiguration configuration) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing.dart:36:Future<void> pdfDefaultTheme() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:17:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:69:  Future<void> _initPlugin() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:111:        ..async = true
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:143:  Future<PrintingInfo> info() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:162:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:170:        collector = () sync* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:268:      // If print() is synchronous
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:287:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:291:  Future<bool> _getPdf(Uint8List bytes, 
+{String? filename}) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:334:  ) async* {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:422:  Future<Image> toImage() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\lib\printing_web.dart:429:  Future<Uint8List> toPng() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:35:        
+.setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:47:  
+test('flutterImageProvider(FileImage)', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:63:    final fontData = 
+File('$path/../pdf/open-sans.ttf').readAsBytesSync();
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\document_test.dart:68:  tearDownAll(() async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:23:  test('PrintingInfo', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\info_test.dart:36:  test('PrintingInfo.fromMap', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:34:  test('info', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:39:  test('layoutPdf', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:50:  test('sharePdf', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:54:  test('pickPrinter', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:58:  test('directPrintPdf', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:68:  test('raster', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:72:  test('test image', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:90:  Future<PrintingInfo> info() async => 
+PrintingInfo.unavailable;
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:102:  ) async => true;
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:112:  ) async => true;
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:115:  Future<Printer?> pickPrinter(Rect 
+bounds) async => null;
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\printing_test.dart:122:  ) async* {}
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:27:  test('PdfRaster', () async {
+windows\flutter\ephemeral\.plugin_symlinks\printing\test\raster_test.dart:38:  testWidgets('PdfRasterImage', 
+(WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:14:  
+testWidgets('Can launch share', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:19:  
+testWidgets('Can launch shareUri', (WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\integration_test\share_plus_test.dart:25:      
+(WidgetTester tester) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:114:                onPressed: () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:207:  void _onShareWithResult(BuildContext 
+context) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:245:  void 
+_onShareXFileFromAssets(BuildContext context) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\lib\main.dart:269:  void 
+_onShareTextAsXFile(BuildContext context) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\test_driver\share_plus_test.dart:5:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\example\test_driver\share_plus_test.dart:10:Future<void> main() 
+async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_linux.dart:27:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_linux.dart:38:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:36:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:80:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:164:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:260:  ) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_web.dart:282:  static Future<File> 
+_fromXFile(XFile file, {String? nameOverride}) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_windows.dart:32:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\src\share_plus_windows.dart:43:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:5:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:43:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:89:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\lib\share_plus.dart:132:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:12:  test('url encoding is 
+correct for &', () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:21:  test('url encoding is 
+correct for spaces', () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:29:  test('throws when 
+url_launcher can\'t launch uri', () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_linux_test.dart:33:    expect(() async => await 
+SharePlusLinuxPlugin(mock).share('foo bar'),
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:32:    () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:45:    () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:57:    () async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\share_plus_windows_test.dart:61:      expect(() async => 
+await SharePlusWindowsPlugin(mock).share('foo bar'),
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\url_launcher_mock.dart:12:  Future<bool> canLaunch(String 
+url) async {
+windows\flutter\ephemeral\.plugin_symlinks\share_plus\test\url_launcher_mock.dart:26:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\example\integration_test\url_launcher_test.dart:12:  
+testWidgets('canLaunch', (WidgetTester _) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\example\lib\main.dart:7:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\example\lib\main.dart:39:  Future<void> 
+_launchInBrowser(String url) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\example\lib\main.dart:55:  Widget 
+_launchStatus(BuildContext context, AsyncSnapshot<void> snapshot) {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\src\messages.g.dart:8:import 'dart:async';
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\src\messages.g.dart:59:  Future<bool> 
+canLaunchUrl(String url) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\src\messages.g.dart:91:  Future<bool> 
+launchUrl(String url) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\url_launcher_windows.dart:42:  }) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\url_launcher_windows.dart:47:  Future<bool> 
+supportsMode(PreferredLaunchMode mode) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\lib\url_launcher_windows.dart:53:  Future<bool> 
+supportsCloseForMode(PreferredLaunchMode mode) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:26:    
+test('handles true', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:35:    
+test('handles false', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:46:    
+test('handles success', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:64:    
+test('handles failure', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:82:    
+test('handles errors', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:102:    
+test('returns true for platformDefault', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:110:    
+test('returns true for external application', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:118:    
+test('returns false for other modes', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:137:  
+test('supportsCloseForMode returns false', () async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:166:  Future<bool> 
+canLaunchUrl(String url) async {
+windows\flutter\ephemeral\.plugin_symlinks\url_launcher_windows\test\url_launcher_windows_test.dart:172:  Future<bool> 
+launchUrl(String url) async {
+
+

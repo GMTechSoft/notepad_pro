@@ -1,4 +1,4 @@
-package com.notepad.pro.notes
+package com.gmtechsoft.notepilot
 
 import io.flutter.embedding.android.FlutterActivity
 

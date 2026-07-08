@@ -176,4 +176,3 @@ class FolderCard extends StatelessWidget {
     );
   }
 }
-

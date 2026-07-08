@@ -1,6 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+
+import 'package:uuid/uuid.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
+import 'package:hive/hive.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
@@ -15,30 +21,35 @@ class CreateFileScreen extends StatefulWidget {
 }
 
 class _CreateFileScreenState extends State<CreateFileScreen> {
+
+  bool _hasCreatedAuto = false; // tracks if auto-save created a new file
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+bool _isSaving = false; // guard against concurrent saves
+late final String _stableFileId; // stable ID for this session
+late final AppLifecycleListener _lifecycleListener; // listener for app lifecycle events
+// Missing fields restored
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+  String _title = '';
+  String _description = '';
 
-  late String _title;
-  late TextEditingController _titleController;
-  late String _description;
-  late bool _addReference;
+  final TextEditingController _titleCtrl = TextEditingController();
+  final TextEditingController _descCtrl = TextEditingController();
+  bool _isTitleUrdu = false;
+  bool _isDescUrdu = false;
+  bool _showReference = false;
+  bool _addReference = false;
   late ReferenceType _referenceType;
-
-  // Video Ref
   late String _videoTitle;
   late int _videoHours;
   late int _videoMinutes;
   late int _videoSeconds;
-
   late TextEditingController _hourCtrl;
   late TextEditingController _minCtrl;
   late TextEditingController _secCtrl;
-
-  // Book Ref
   late TextEditingController _bookTitleController;
   late String _authorName;
-
-  // Controllers for direct text input
   late TextEditingController _volumeCtrl;
   late TextEditingController _pageCtrl;
   late TextEditingController _lineCtrl;
@@ -52,9 +63,21 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
   void initState() {
     super.initState();
     final file = widget.initialFile;
-    _title = file?.title ?? '';
-    _titleController = TextEditingController(text: _title);
-    _description = file?.description ?? '';
+    _titleController = TextEditingController(text: file?.title ?? '');
+    _descriptionController = TextEditingController(text: file?.description ?? '');
+
+    // Freeze a stable ID for this editing session
+    _stableFileId = widget.initialFile?.id ?? const Uuid().v4();
+
+    // Initialize AppLifecycleListener to trigger save when app goes to background
+    _lifecycleListener = AppLifecycleListener(
+      onStateChange: (state) {
+        if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+          _performSecureSaveAndSync(isManualSave: false);
+        }
+      },
+    );
+
     _addReference = file?.referenceType != null &&
         file?.referenceType != ReferenceType.none;
     _referenceType = file?.referenceType ?? ReferenceType.book;
@@ -79,7 +102,7 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
         TextEditingController(text: file?.pageNumber?.toString() ?? '1');
     _lineCtrl = TextEditingController(text: file?.lineNumber?.toString() ?? '');
 
-    // Listeners to validate min values
+    // Validate min page value
     _pageCtrl.addListener(() {
       final val = int.tryParse(_pageCtrl.text);
       if (val != null && val < 1) {
@@ -90,9 +113,94 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
     });
   }
 
+  // ---------------------------------------------------------------------
+  // Auto‑save handling
+  // ---------------------------------------------------------------------
+
+
+  /// Unified save method used by both auto‑save and manual save actions.
+Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
+  // Do nothing if both title and description are empty.
+  if (_titleController.text.trim().isEmpty && _descriptionController.text.trim().isEmpty) return;
+
+    // Guard against concurrent saves.
+  if (_isSaving) return;
+  _isSaving = true;
+  // Build the VaultFile instance with all current field values.
+    final finalFile = VaultFile(
+      id: widget.initialFile?.id ?? _stableFileId,
+      folderId: widget.initialFile?.folderId ?? widget.folderId,
+      title: _titleController.text.isEmpty ? "Untitled Note" : _titleController.text,
+      description: _descriptionController.text,
+      createdAt: widget.initialFile?.createdAt ?? DateTime.now(),
+      updatedAt: DateTime.now(),
+    referenceType: _addReference ? _referenceType : ReferenceType.none,
+    videoTitle: _addReference && _referenceType == ReferenceType.video ? _videoTitle : null,
+    videoRefHours: _addReference && _referenceType == ReferenceType.video ? _videoHours : null,
+    videoRefMinutes: _addReference && _referenceType == ReferenceType.video ? _videoMinutes : null,
+    videoRefSeconds: _addReference && _referenceType == ReferenceType.video ? _videoSeconds : null,
+    bookName: _addReference && _referenceType == ReferenceType.book ? _bookTitleController.text : null,
+    authorName: _addReference && _referenceType == ReferenceType.book ? _authorName : null,
+    volume: _addReference && _referenceType == ReferenceType.book ? (_volumeCtrl.text.isEmpty ? null : _volumeCtrl.text) : null,
+    pageNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_pageCtrl.text) ?? 1 : null,
+    lineNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_lineCtrl.text) : null
+  );
+
+  try {
+    if (widget.initialFile == null && !_hasCreatedAuto) {
+      // New file – use createFile to insert into local DB.
+      await context.read<FilesCubit>().createFile(
+        folderId: widget.folderId,
+        title: finalFile.title,
+        description: finalFile.description,
+        referenceType: finalFile.referenceType,
+        videoTitle: finalFile.videoTitle,
+        videoRefHours: finalFile.videoRefHours,
+        videoRefMinutes: finalFile.videoRefMinutes,
+        videoRefSeconds: finalFile.videoRefSeconds,
+        bookName: finalFile.bookName,
+        authorName: finalFile.authorName,
+        volume: finalFile.volume,
+        pageNumber: finalFile.pageNumber,
+        lineNumber: finalFile.lineNumber,
+      );
+      _hasCreatedAuto = true; // mark creation done.
+    } else {
+      // Existing or already created file – update.
+      await context.read<FilesCubit>().updateFile(finalFile);
+    }
+
+      // If auto‑sync is enabled and this is a manual save, trigger a single file upload to Google Drive.
+      final configBox = Hive.box('settings');
+      final bool isAutoSyncEnabled = (configBox.get('auto_sync', defaultValue: false) as bool);
+      if (isAutoSyncEnabled) {
+        await context.read<SyncCubit>().syncNow();
+      }
+    } catch (error, stackTrace) {
+      // Log any error – keep UI responsive.
+      print('Database or Cloud pipeline handling error: $error');
+      print(stackTrace);
+    } finally {
+    // Reset saving guard.
+    _isSaving = false;
+    // If this was an explicit manual save, navigate back.
+    if (isManualSave && mounted) {
+      Navigator.pop(context);
+    }
+  }
+}
+
   @override
   void dispose() {
+    // Dispose lifecycle listener
+    _lifecycleListener.dispose();
+
+    // Force a final synchronous save to ensure all data is persisted and synced
+    _performSecureSaveAndSync(isManualSave: false);
+
+    // Dispose controllers and focus nodes
     _titleController.dispose();
+    _descriptionController.dispose();
     _hourCtrl.dispose();
     _minCtrl.dispose();
     _secCtrl.dispose();
@@ -220,8 +328,13 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+    return WillPopScope(
+      onWillPop: () async {
+        await _performSecureSaveAndSync(isManualSave: false);
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F0FF),
       appBar: _buildAppBar(context),
       body: Form(
         key: _formKey,
@@ -262,12 +375,31 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
             ),
             const SizedBox(height: 10),
             _buildFieldLabel("Description"),
-            _buildTextField(
-              hint: "Apni notes yahan likhein...",
-              initialValue: _description,
-              onSaved: (val) => _description = val ?? '',
-              maxLines: 4,
-              minHeight: 80,
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              child: TextFormField(
+                controller: _descriptionController,
+                maxLines: null,
+                minLines: 1,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                textDirection: _isUrdu(_descriptionController.text) ? TextDirection.rtl : TextDirection.ltr,
+                textAlign: _isUrdu(_descriptionController.text) ? TextAlign.right : TextAlign.left,
+                onChanged: (val) => setState(() {}),
+                validator: (val) => null,
+                decoration: const InputDecoration(
+                  hintText: "Apni notes yahan likhein...",
+                  hintStyle: TextStyle(color: Color(0xFFB0A0CC), fontSize: 13),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
+              ),
             ),
             const SizedBox(height: 16),
             const Divider(color: Color(0xFFE8E2F5), thickness: 0.5),
@@ -377,7 +509,7 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -403,7 +535,7 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
           ),
           const Spacer(),
           ElevatedButton.icon(
-            onPressed: (isSaveDisabled || _isLoading) ? null : _saveFile,
+            onPressed: (isSaveDisabled || _isLoading) ? null : () async => await _performSecureSaveAndSync(isManualSave: true),
             icon: _isLoading
                 ? const SizedBox(
                     width: 12,

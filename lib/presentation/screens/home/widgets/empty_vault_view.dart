@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/screens/home/widgets/create_bottom_sheet.dart';
-import 'package:notepad_pro/presentation/screens/search/search_screen.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 
+import 'vault_search_delegate.dart';
 class EmptyVaultView extends StatelessWidget {
   const EmptyVaultView({super.key});
 
@@ -48,7 +48,7 @@ class EmptyVaultView extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           const Text(
-            'My Notes Vault',
+            'NotePilot App',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w500,

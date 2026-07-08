@@ -1,6 +1,6 @@
 {
-    "name": "Notes Vault App",
-    "short_name": "Notes Vault App",
+    "name": "NotePilot",
+    "short_name": "NotePilot",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

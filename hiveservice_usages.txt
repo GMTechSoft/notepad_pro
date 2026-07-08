@@ -1,0 +1,125 @@
+﻿
+lib\core\di\service_locator.dart:6:import '../../services/hive_service.dart'; // Import HiveService
+lib\core\di\service_locator.dart:30:  // Register HiveService
+lib\core\di\service_locator.dart:31:  sl.registerLazySingleton<HiveService>(() => HiveService(
+lib\core\di\service_locator.dart:45:    () => ThemeCubit(sl()), // Inject HiveService
+lib\core\di\service_locator.dart:55:    () => GoogleDriveSyncService(sl(), sl()), // Inject AuthService and HiveService
+lib\core\di\service_locator.dart:59:    () => VaultRepositoryImpl(sl()), // Inject HiveService
+lib\core\di\service_locator.dart:64:    () => NoteRepositoryImpl(sl()), // Inject HiveService
+lib\data\repositories\note_repository_impl.dart:8:  final HiveService _hiveService;
+lib\data\repositories\note_repository_impl.dart:11:  NoteRepositoryImpl(this._hiveService);
+lib\data\repositories\note_repository_impl.dart:15:    return await _hiveService.getNotes();
+lib\data\repositories\note_repository_impl.dart:20:    return await _hiveService.getNote(id);
+lib\data\repositories\note_repository_impl.dart:25:    await _hiveService.updateNote(note);
+lib\data\repositories\note_repository_impl.dart:30:    await _hiveService.deleteNote(id);
+lib\data\repositories\note_repository_impl.dart:44:    await _hiveService.addNote(newNote);
+lib\data\repositories\vault_repository_impl.dart:11:  final HiveService _hiveService;
+lib\data\repositories\vault_repository_impl.dart:14:  VaultRepositoryImpl(this._hiveService);
+lib\data\repositories\vault_repository_impl.dart:19:    final folderModels = await _hiveService.getFolders();
+lib\data\repositories\vault_repository_impl.dart:28:    final folderModel = await _hiveService.getFolder(id);
+lib\data\repositories\vault_repository_impl.dart:51:    await _hiveService.addFolder(newFolderModel);
+lib\data\repositories\vault_repository_impl.dart:58:    final folderModels = await _hiveService.getFolders();
+lib\data\repositories\vault_repository_impl.dart:67:    await _hiveService.updateFolder(folderModel);
+lib\data\repositories\vault_repository_impl.dart:72:    await _hiveService.deleteFolder(id);
+lib\data\repositories\vault_repository_impl.dart:78:    final fileModels = await _hiveService.getFiles();
+lib\data\repositories\vault_repository_impl.dart:120:    await _hiveService.addFile(newFileModel);
+lib\data\repositories\vault_repository_impl.dart:128:    await _hiveService.updateFile(fileModel);
+lib\data\repositories\vault_repository_impl.dart:133:    // Update the file's folderId locally and persist via 
+HiveService
+lib\data\repositories\vault_repository_impl.dart:134:    final fileModel = await _hiveService.getFile(fileId);
+lib\data\repositories\vault_repository_impl.dart:142:    await _hiveService.updateFile(updatedModel);
+lib\data\repositories\vault_repository_impl.dart:158:      final folderModel = await 
+_hiveService.getFolder(currentParentId);
+lib\data\repositories\vault_repository_impl.dart:165:    await _hiveService.deleteFile(id);
+lib\data\repositories\vault_repository_impl.dart:170:    final fileModels = await _hiveService.getFiles();
+lib\data\repositories\vault_repository_impl.dart:180:    final folder = await _hiveService.getFolder(itemId);
+lib\data\repositories\vault_repository_impl.dart:192:      await _hiveService.updateFolder(updatedFolder);
+lib\data\repositories\vault_repository_impl.dart:196:    final file = await _hiveService.getFile(itemId);
+lib\data\repositories\vault_repository_impl.dart:215:    final files = await _hiveService.getFiles();
+lib\data\repositories\vault_repository_impl.dart:226:    final allFolders = await _hiveService.getFolders();
+lib\data\repositories\vault_repository_impl.dart:231:        final parent = await _hiveService.getFolder(parentId);
+lib\data\repositories\vault_repository_impl.dart:235:          await _hiveService.updateFolder(updated);
+lib\data\repositories\vault_repository_impl.dart:249:      final folder = await _hiveService.getFolder(currentId);
+lib\data\repositories\vault_repository_impl.dart:260:    final folders = await _hiveService.getFolders();
+lib\presentation\blocs\sync\sync_cubit.dart:13:  final HiveService _hiveService;
+lib\presentation\blocs\sync\sync_cubit.dart:17:  SyncCubit(this._authService, this._syncService, this._hiveService) : 
+super(const SyncState()) {
+lib\presentation\blocs\sync\sync_cubit.dart:23:          final configBox = _hiveService.appSettingsBox;
+lib\presentation\blocs\sync\sync_cubit.dart:56:    _hiveService.fileBox.listenable().addListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:57:    _hiveService.noteBox.listenable().addListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:58:    _hiveService.folderBox.listenable().addListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:65:    final totalCount = _hiveService.fileBox.length + 
+lib\presentation\blocs\sync\sync_cubit.dart:66:                       _hiveService.noteBox.length + 
+lib\presentation\blocs\sync\sync_cubit.dart:67:                       _hiveService.folderBox.length;
+lib\presentation\blocs\sync\sync_cubit.dart:69:    final syncedFilesCount = _hiveService.fileBox.values.where((e) => 
+e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:70:    final syncedNotesCount = _hiveService.noteBox.values.where((e) => 
+e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:71:    final syncedFoldersCount = _hiveService.folderBox.values.where((e) 
+=> e.isSynced).length;
+lib\presentation\blocs\sync\sync_cubit.dart:80:      _hiveService.appSettingsBox.put('cloud_backup_count', 
+totalSyncedCount);
+lib\presentation\blocs\sync\sync_cubit.dart:89:    
+_hiveService.fileBox.listenable().removeListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:90:    
+_hiveService.noteBox.listenable().removeListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:91:    
+_hiveService.folderBox.listenable().removeListener(_updateLocalCounts);
+lib\presentation\blocs\sync\sync_cubit.dart:97:      final configBox = _hiveService.appSettingsBox;
+lib\presentation\blocs\sync\sync_cubit.dart:156:      final configBox = _hiveService.appSettingsBox;
+lib\presentation\blocs\sync\sync_cubit.dart:177:        final configBox = _hiveService.appSettingsBox;
+lib\presentation\blocs\sync\sync_cubit.dart:210:        final configBox = _hiveService.appSettingsBox;
+lib\presentation\blocs\theme\theme_cubit.dart:6:  final HiveService _hiveService;
+lib\presentation\blocs\theme\theme_cubit.dart:8:  ThemeCubit(this._hiveService) : super(ThemeMode.light);
+lib\presentation\blocs\theme\theme_cubit.dart:11:    final isDark = _hiveService.appSettingsBox.get('isDark', 
+defaultValue: false) as bool;
+lib\presentation\blocs\theme\theme_cubit.dart:16:    await _hiveService.appSettingsBox.put('isDark', isDarkMode);
+lib\presentation\screens\folder_detail\folder_detail_screen.dart:27:    final hiveService = sl<HiveService>();
+lib\presentation\screens\folder_detail\folder_detail_screen.dart:30:      valueListenable: 
+hiveService.folderBox.listenable(),
+lib\presentation\screens\folder_detail\folder_detail_screen.dart:84:            valueListenable: 
+hiveService.fileBox.listenable(),
+lib\presentation\screens\folder_detail\folder_detail_screen.dart:87:                valueListenable: 
+hiveService.noteBox.listenable(),
+lib\presentation\screens\home\widgets\vault_search_delegate.dart:13:  final HiveService _hiveService = 
+sl<HiveService>();
+lib\presentation\screens\home\widgets\vault_search_delegate.dart:82:    final allFiles = 
+_hiveService.fileBox.values.map((f) => f.toEntity()).toList();
+lib\presentation\screens\home\home_screen.dart:21:    final hiveService = sl<HiveService>();
+lib\presentation\screens\home\home_screen.dart:24:      valueListenable: hiveService.folderBox.listenable(),
+lib\presentation\screens\home\home_screen.dart:27:          valueListenable: hiveService.fileBox.listenable(),
+lib\presentation\screens\home\home_screen.dart:30:              valueListenable: hiveService.noteBox.listenable(),
+lib\presentation\screens\search\search_screen.dart:29:  final HiveService _hiveService = sl<HiveService>();
+lib\presentation\screens\search\search_screen.dart:422:    final folder = _hiveService.folderBox.get(folderId); 
+lib\presentation\screens\search\search_screen.dart:437:    return _hiveService.fileBox.values.map((f) => 
+f.toEntity()).toList();
+lib\services\google_drive_sync_service.dart:19:  final HiveService _hiveService;
+lib\services\google_drive_sync_service.dart:26:  GoogleDriveSyncService(this._authService, this._hiveService);
+lib\services\google_drive_sync_service.dart:62:      final localFolders = await _hiveService.getFolders();
+lib\services\google_drive_sync_service.dart:63:      final localNotes = await _hiveService.getNotes();
+lib\services\google_drive_sync_service.dart:64:      final localFiles = await _hiveService.getFiles();
+lib\services\google_drive_sync_service.dart:86:          await _hiveService.updateFolder(folder.copyWith(driveFileId: 
+driveId, isSynced: true));
+lib\services\google_drive_sync_service.dart:122:          await _hiveService.addNote(updatedNote);
+lib\services\google_drive_sync_service.dart:133:          await _hiveService.updateFile(updatedFile);
+lib\services\google_drive_sync_service.dart:180:      await _hiveService.clearAllData();
+lib\services\google_drive_sync_service.dart:239:          await _hiveService.addFolder(folder);
+lib\services\google_drive_sync_service.dart:274:              await _hiveService.addNote(note);
+lib\services\google_drive_sync_service.dart:281:              await _hiveService.addFile(vaultFile);
+lib\services\google_drive_sync_service.dart:291:      await _hiveService.setInitialized(true);
+lib\services\google_drive_sync_service.dart:292:      _hiveService.refresh();
+lib\services\hive_service.dart:7:class HiveService extends ChangeNotifier {
+lib\services\hive_service.dart:16:  HiveService({
+lib\services\sync_service.dart:19:  final HiveService _hiveService;
+lib\services\sync_service.dart:27:  GoogleDriveSyncService(this._authService, this._hiveService);
+lib\services\sync_service.dart:78:      final localFolders = await _hiveService.getFolders();
+lib\services\sync_service.dart:79:      final localNotes = await _hiveService.getNotes();
+lib\services\sync_service.dart:199:      await _hiveService.clearAllData();
+lib\services\sync_service.dart:200:      await _hiveService.noteBox.clear();
+lib\services\sync_service.dart:201:      await _hiveService.folderBox.clear();
+lib\services\sync_service.dart:236:            await _hiveService.addFolder(newFolder);
+lib\services\sync_service.dart:296:          await _hiveService.noteBox.put(restoredNote.id, restoredNote);
+lib\services\sync_service.dart:308:      await _hiveService.setInitialized(true);
+lib\services\sync_service.dart:309:      _hiveService.refresh();
+
+

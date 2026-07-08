@@ -1,28 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:notepad_pro/presentation/screens/search_engine.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:notepad_pro/core/di/service_locator.dart';
 import 'package:notepad_pro/core/utils/search_helper.dart';
 import 'package:notepad_pro/domain/entities/search_result.dart';
-import 'package:notepad_pro/services/hive_service.dart';
+import 'package:notepad_pro/core/utils/search_mode.dart';
+
+import '../../../domain/entities/vault_file.dart';
+import '../../../services/hive_service.dart';
 
 class SearchScreen extends StatefulWidget {
   final String initialQuery;
+  final String? folderId; // Scoped search support added
 
-  const SearchScreen({super.key, this.initialQuery = ''});
+  const SearchScreen({super.key, this.initialQuery = '', this.folderId});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  Map<String, Color> _wordColorMap = {};
+  List<String> _searchTokens = [];
+
   final TextEditingController _searchController = TextEditingController();
   final HiveService _hiveService = sl<HiveService>();
 
   String _query = '';
-  String _activeFilter = 'all';
   List<SearchResult> _results = [];
   bool _isSearching = false;
+  String _activeFilter = 'all';
+  final SearchMode _searchMode = SearchMode.anyWord;
+
+  final List<Color> _multiHighlighterPalette = [
+    const Color(0xFFFFD54F), // Amber/Yellow
+    const Color(0xFF81C784), // Soft Green
+    const Color(0xFF4FC3F7), // Light Blue
+    const Color(0xFFFF8A65), // Coral/Orange
+    const Color(0xFFBA68C8), // Purple
+    const Color(0xFF4DB6AC), // Teal
+    const Color(0xFFE57373), // Red/Pink
+    const Color(0xFFAED581), // Lime Green
+  ];
 
   @override
   void initState() {
@@ -57,7 +77,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSearchBar() {
     final isRTL = _isUrdu(_query);
-
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -73,11 +92,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   color: const Color(0xFFEDE9F8),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(
-                  Icons.arrow_back,
-                  size: 16,
-                  color: Color(0xFF6C5CE7),
-                ),
+                child: const Icon(Icons.arrow_back, size: 16, color: Color(0xFF6C5CE7)),
               ),
             ),
             const SizedBox(width: 8),
@@ -87,37 +102,20 @@ class _SearchScreenState extends State<SearchScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFFD8D0F0),
-                    width: 0.5,
-                  ),
+                  border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
                 ),
                 child: TextField(
                   controller: _searchController,
                   textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                   textAlign: isRTL ? TextAlign.right : TextAlign.left,
                   autofocus: true,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF2D2540),
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540), fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: isRTL ? 'تلاش کریں...' : 'Search notes...',
-                    hintStyle: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFFB0A0CC),
-                    ),
+                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFB0A0CC)),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 9,
-                    ),
-                    suffixIcon: const Icon(
-                      Icons.search,
-                      size: 16,
-                      color: Color(0xFFC4B8E0),
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    suffixIcon: const Icon(Icons.search, size: 16, color: Color(0xFFC4B8E0)),
                   ),
                   onChanged: (val) {
                     setState(() {
@@ -128,7 +126,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         _activeFilter = 'all';
                       }
                     });
-                    _performSearch(val);
+                    _performSearch(_query);
                   },
                 ),
               ),
@@ -141,20 +139,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   _query = '';
                   _results = [];
                   _isSearching = false;
+                  _wordColorMap = {}; // Fixed name to avoid target compiler failure
+                  _searchTokens = [];
                 });
               },
               child: Container(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Color(0xFF6C5CE7),
-                ),
+                decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(9)),
+                child: const Icon(Icons.close, size: 16, color: Color(0xFF6C5CE7)),
               ),
             ),
           ],
@@ -178,7 +171,6 @@ class _SearchScreenState extends State<SearchScreen> {
             {'key': 'content', 'label': 'Content'},
             {'key': 'english', 'label': 'English'},
           ];
-
     return SizedBox(
       height: 32,
       child: ListView.separated(
@@ -200,23 +192,9 @@ class _SearchScreenState extends State<SearchScreen> {
               decoration: BoxDecoration(
                 color: isActive ? const Color(0xFFEDE9F8) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isActive
-                      ? const Color(0xFF6C5CE7)
-                      : const Color(0xFFD8D0F0),
-                  width: 0.5,
-                ),
+                border: Border.all(color: isActive ? const Color(0xFF6C5CE7) : const Color(0xFFD8D0F0), width: 0.5),
               ),
-              child: Text(
-                f['label']!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                  color: isActive
-                      ? const Color(0xFF6C5CE7)
-                      : const Color(0xFF9B8DB8),
-                ),
-              ),
+              child: Text(f['label']!, style: TextStyle(fontSize: 11, fontWeight: isActive ? FontWeight.w500 : FontWeight.w400, color: isActive ? const Color(0xFF6C5CE7) : const Color(0xFF9B8DB8))),
             ),
           );
         },
@@ -226,406 +204,222 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSummaryBar() {
     if (_query.isEmpty) return const SizedBox.shrink();
-
     final totalFiles = _results.length;
-    final totalMatches = _results.fold<int>(
-      0,
-      (sum, r) => sum + r.matchCount,
-    );
-
+    final totalMatches = _results.fold<int>(0, (sum, r) => sum + r.totalMatches);
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5)),
       child: Row(
         children: [
-          const Icon(
-            Icons.description_outlined,
-            size: 14,
-            color: Color(0xFF6C5CE7),
-          ),
+          const Icon(Icons.description_outlined, size: 14, color: Color(0xFF6C5CE7)),
           const SizedBox(width: 5),
-          Text(
-            '$totalFiles file mein mila',
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF6C5CE7),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text('$totalFiles file mein mila', style: const TextStyle(fontSize: 11, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDE9F8),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Text(
-              '$totalMatches matches',
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF6C5CE7),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(5)), child: Text('$totalMatches matches', style: const TextStyle(fontSize: 11, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500))),
         ],
       ),
     );
   }
 
   Widget _buildResultsList() {
-    if (_query.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search,
-        title: 'Kuch likhein',
-        subtitle: 'Notes aur folders mein search karein',
-      );
-    }
-
-    if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation(Color(0xFF6C5CE7)),
-        ),
-      );
-    }
-
-    if (_results.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off_outlined,
-        title: 'Koi result nahi mila',
-        subtitle: '"$_query" ke liye kuch nahi mila',
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-      itemCount: _results.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 7),
-      itemBuilder: (context, i) => _buildResultCard(_results[i]),
-    );
+    if (_query.isEmpty) return _buildEmptyState(icon: Icons.search, title: 'Kuch likhein', subtitle: 'Notes aur folders mein search karein');
+    if (_isSearching) return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Color(0xFF6C5CE7))));
+    if (_results.isEmpty) return _buildEmptyState(icon: Icons.search_off_outlined, title: 'Koi result nahi mila', subtitle: '\"$_query\" ke liye kuch nahi mila');
+    return ListView.separated(padding: const EdgeInsets.fromLTRB(12, 0, 12, 20), itemCount: _results.length, separatorBuilder: (_, __) => const SizedBox(height: 7), itemBuilder: (context, i) => _buildResultCard(_results[i]));
   }
 
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _buildEmptyState({required IconData icon, required String title, required String subtitle}) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDE9F8),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, size: 26, color: const Color(0xFF6C5CE7)),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF2D2540),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF9B8DB8)),
-          ),
-        ],
-      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(width: 52, height: 52, decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(14)), child: Icon(icon, size: 26, color: const Color(0xFF6C5CE7))),
+        const SizedBox(height: 12),
+        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
+        const SizedBox(height: 4),
+        Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Color(0xFF9B8DB8))),
+      ]),
     );
   }
 
   Widget _buildResultCard(SearchResult result) {
     final file = result.file;
-    final content = file.description;
-    final isRTL = _isUrdu(content);
+    final isRTL = _isUrdu(file.description);
     final textDir = isRTL ? TextDirection.rtl : TextDirection.ltr;
     final textAlign = isRTL ? TextAlign.right : TextAlign.left;
     final folderName = _getFolderName(file.folderId) ?? 'Root';
     final dateLabel = _getRelativeDate(file.updatedAt);
-    final previewLines = _extractPreviewLines(content, _query, result.snippet);
+    final engine = SearchEngine(tokens: SearchEngine.tokenize(_query));
+
+    String combinedContent = "${file.title} ${file.description}".toLowerCase();
+    Map<String, int> dynamicWordCounts = {};
+    for (String token in _searchTokens) {
+      final escapedToken = RegExp.escape(token.toLowerCase());
+      dynamicWordCounts[token] = RegExp(escapedToken).allMatches(combinedContent).length;
+    }
 
     return GestureDetector(
-      onTap: () => context.push('/read-note', extra: file),
+      onTap: () => context.push('/read-note', extra: {
+        'file': file,
+        'searchEngine': engine,
+        'searchMode': _searchMode.name,
+        'highlightQuery': _query,
+        'highlightWords': _searchTokens,
+        'highlightColors': _wordColorMap,
+      }),
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(11, 9, 11, 6),
-              child: Column(
-                crossAxisAlignment:
-                    isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  _buildHighlightedText(
-                    text: file.title,
-                    query: _query,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF2D2540),
-                    ),
-                    textAlign: textAlign,
-                    textDirection: textDir,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$folderName · $dateLabel',
-                    textDirection: textDir,
-                    textAlign: textAlign,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF9B8DB8),
-                    ),
-                  ),
-                ],
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(padding: const EdgeInsets.fromLTRB(11, 9, 11, 6), child: Column(crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
+            _buildMultiHighlight(text: file.title, baseStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)), textDirection: textDir, textAlign: textAlign),
+            const SizedBox(height: 2),
+            Text('$folderName · $dateLabel', textDirection: textDir, textAlign: textAlign, style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+          ])),
+          const Divider(height: 1, color: Color(0xFFF5F0FF), thickness: 0.5),
+          Padding(padding: const EdgeInsets.fromLTRB(11, 6, 11, 6), child: Column(crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: result.previewLines.take(3).map((line) => Padding(padding: const EdgeInsets.only(bottom: 2), child: _buildMultiHighlight(text: line, baseStyle: const TextStyle(fontSize: 11, color: Color(0xFF6D6380), height: 1.6), textDirection: textDir, textAlign: textAlign))).toList())),
+          Padding(padding: const EdgeInsets.fromLTRB(11, 0, 11, 8), child: Row(children: [
+            Expanded(
+              child: Wrap(
+                spacing: 4, 
+                runSpacing: 4,
+                children: dynamicWordCounts.entries.where((e) => e.value > 0).map((e) {
+                  final color = _wordColorMap[e.key] ?? Colors.grey;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), 
+                    decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withOpacity(0.3), width: 0.5)), 
+                    child: Text('${e.key} ×${e.value}', style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w600))
+                  );
+                }).toList()
               ),
             ),
-            const Divider(
-              height: 1,
-              color: Color(0xFFF5F0FF),
-              thickness: 0.5,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(11, 6, 11, 6),
-              child: Column(
-                crossAxisAlignment:
-                    isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: previewLines
-                    .take(3)
-                    .map(
-                      (line) => Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: _buildHighlightedText(
-                          text: line,
-                          query: _query,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF6D6380),
-                            height: 1.6,
-                          ),
-                          textAlign: textAlign,
-                          textDirection: textDir,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(11, 0, 11, 8),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDE9F8),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '${result.matchCount} matches',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF6C5CE7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE1F5EE),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      isRTL ? 'Urdu' : 'English',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF0F6E56),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDE9F8),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Text(
-                      'Open ->',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF6C5CE7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            const SizedBox(width: 8),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(5)), child: const Text('Open ->', style: TextStyle(fontSize: 10, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500))),
+          ])),
+        ]),
       ),
     );
   }
 
-  Widget _buildHighlightedText({
-    required String text,
-    required String query,
-    required TextStyle style,
-    TextAlign textAlign = TextAlign.left,
-    TextDirection textDirection = TextDirection.ltr,
-  }) {
-    if (query.isEmpty) {
-      return Text(
-        text,
-        style: style,
-        textAlign: textAlign,
-        textDirection: textDirection,
-      );
-    }
-
+  Widget _buildMultiHighlight({required String text, required TextStyle baseStyle, required TextDirection textDirection, required TextAlign textAlign}) {
+    if (_searchTokens.isEmpty) return Text(text, style: baseStyle, textDirection: textDirection, textAlign: textAlign);
     final spans = <TextSpan>[];
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    int start = 0;
-
-    while (true) {
-      final index = lowerText.indexOf(lowerQuery, start);
-      if (index == -1) {
-        spans.add(TextSpan(text: text.substring(start), style: style));
-        break;
+    String remaining = text;
+    
+    while (remaining.isNotEmpty) {
+      int? earliest; 
+      String? matchedToken;
+      
+      for (final token in _searchTokens) {
+        final idx = remaining.toLowerCase().indexOf(token.toLowerCase());
+        if (idx != -1 && (earliest == null || idx < earliest)) { 
+          earliest = idx; 
+          matchedToken = token; 
+        }
       }
-
-      if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: style));
+      
+      if (earliest == null || matchedToken == null) { 
+        spans.add(TextSpan(text: remaining, style: baseStyle)); 
+        break; 
       }
+      if (earliest > 0) {
+        spans.add(TextSpan(text: remaining.substring(0, earliest), style: baseStyle));
+      }
+      
+      final color = _wordColorMap[matchedToken] ?? Colors.yellow;
+      final textStyleColor = (_multiHighlighterPalette.contains(color) && color != const Color(0xFFBA68C8)) ? const Color(0xFF2D2540) : color;
 
-      spans.add(
-        TextSpan(
-          text: text.substring(index, index + query.length),
-          style: style.copyWith(
-            backgroundColor: const Color(0xFFFFD93D),
-            color: const Color(0xFF5A4200),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      );
-
-      start = index + query.length;
+      spans.add(TextSpan(
+        text: remaining.substring(earliest, earliest + matchedToken.length), 
+        style: baseStyle.copyWith(
+          backgroundColor: color.withOpacity(0.3), 
+          color: textStyleColor,
+          fontWeight: FontWeight.bold
+        )
+      ));
+      remaining = remaining.substring(earliest + matchedToken.length);
     }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      textAlign: textAlign,
-      textDirection: textDirection,
-    );
+    return RichText(text: TextSpan(children: spans), textDirection: textDirection, textAlign: textAlign);
   }
 
-  bool _isUrdu(String text) {
-    if (text.isEmpty) return false;
-    final urduRegex = RegExp(r'[\u0600-\u06FF]');
-    return urduRegex.hasMatch(text);
+  bool _isUrdu(String text) { 
+    if (text.isEmpty) return false; 
+    return RegExp(r'[\u0600-\u06FF]').hasMatch(text); 
+  }
+
+  Map<String, Color> compileQueryColorMap(String rawQuery, String fullTextContent) {
+    Map<String, Color> tokenMap = {};
+    if (rawQuery.trim().isEmpty) return tokenMap;
+
+    final String textLower = fullTextContent.toLowerCase();
+    final List<String> rawTokens = rawQuery.trim().split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+    final List<String> finalProcessedTokens = [];
+
+    int i = 0;
+    while (i < rawTokens.length) {
+      if (i < rawTokens.length - 1) {
+        String pairedPhrase = "${rawTokens[i]} ${rawTokens[i + 1]}";
+        if (textLower.contains(pairedPhrase.toLowerCase())) {
+          finalProcessedTokens.add(pairedPhrase);
+          i += 2;
+          continue;
+        }
+      }
+      finalProcessedTokens.add(rawTokens[i]);
+      i++;
+    }
+
+    int paletteTracker = 0;
+    for (String token in finalProcessedTokens) {
+      if (token.isNotEmpty && !tokenMap.containsKey(token)) {
+        tokenMap[token] = _multiHighlighterPalette[paletteTracker % _multiHighlighterPalette.length];
+        paletteTracker++;
+      }
+    }
+    return tokenMap;
   }
 
   Future<void> _performSearch(String query) async {
     if (query.trim().isEmpty) {
-      setState(() {
-        _results = [];
-        _isSearching = false;
-      });
+      setState(() { _results = []; _isSearching = false; _query = ''; _wordColorMap = {}; _searchTokens = []; });
       return;
     }
-
     setState(() => _isSearching = true);
+    
+    // Fetch raw notes pool
+    List<VaultFile> allNotes = await _getAllNotes();
+    
+    // STRICT FIX: Apply explicit folder bounds constraints if folderId is injected
+    if (widget.folderId != null && widget.folderId!.isNotEmpty) {
+      allNotes = allNotes.where((note) => note.folderId == widget.folderId).toList();
+    }
 
-    final raw = await Future<List<SearchResult>>(() {
-      final allFiles = _hiveService.fileBox.values
-          .map((fileModel) => fileModel.toEntity())
-          .toList();
-      return SearchHelper.searchFiles(query, allFiles);
-    });
-
-    if (!mounted || query != _query) return;
-
+    final matched = SearchHelper.searchFiles(query, allNotes, SearchMode.anyWord);
+    
     final lowerQuery = query.toLowerCase();
-    final filtered = raw.where((r) {
+    final filtered = matched.where((r) {
       switch (_activeFilter) {
-        case 'title':
-          return r.file.title.toLowerCase().contains(lowerQuery);
-        case 'content':
-          return r.file.description.toLowerCase().contains(lowerQuery);
-        case 'english':
-          return !_isUrdu('${r.file.title} ${r.file.description}');
-        case 'urdu':
-          return _isUrdu('${r.file.title} ${r.file.description}');
-        default:
-          return true;
+        case 'title': return r.file.title.toLowerCase().contains(lowerQuery);
+        case 'content': return r.file.description.toLowerCase().contains(lowerQuery);
+        case 'english': return !_isUrdu('${r.file.title} ${r.file.description}');
+        case 'urdu': return _isUrdu('${r.file.title} ${r.file.description}');
+        default: return true;
       }
     }).toList();
-
+    
+    final combinedText = filtered.map((r) => '${r.file.title} ${r.file.description}').join(' ');
+    _wordColorMap = compileQueryColorMap(query, combinedText);
+    _searchTokens = _wordColorMap.keys.toList();
+    filtered.sort((a, b) => b.totalMatches.compareTo(a.totalMatches));
+    
     setState(() {
       _results = filtered;
       _isSearching = false;
     });
   }
 
-  List<String> _extractPreviewLines(
-    String content,
-    String query,
-    String fallbackSnippet,
-  ) {
-    final lines = content
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .map((line) => line.trim())
-        .toList();
-    final lowerQuery = query.toLowerCase();
-    final matches = lines
-        .where((line) => line.toLowerCase().contains(lowerQuery))
-        .take(3)
-        .toList();
-
-    if (matches.isNotEmpty) return matches;
-    if (fallbackSnippet.trim().isNotEmpty) return [fallbackSnippet.trim()];
-    return lines.take(2).toList();
-  }
-
-  String? _getFolderName(String? folderId) {
-    if (folderId == null) return null;
-    final folder = _hiveService.folderBox.get(folderId);
-    return folder?.name;
+  String? _getFolderName(String? folderId) { 
+    if (folderId == null) return null; 
+    final folder = _hiveService.folderBox.get(folderId); 
+    return folder?.name; 
   }
 
   String _getRelativeDate(DateTime date) {
@@ -633,48 +427,12 @@ class _SearchScreenState extends State<SearchScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final thatDay = DateTime(date.year, date.month, date.day);
-
     if (today == thatDay) return 'Today';
     if (yesterday == thatDay) return 'Yesterday';
     return DateFormat('MMM dd, yyyy').format(date);
   }
-}
 
-class VaultSearchDelegate extends SearchDelegate<void> {
-  @override
-  String get searchFieldLabel => 'Search notes...';
-
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.close),
-        onPressed: () {
-          if (query.isEmpty) {
-            close(context, null);
-          } else {
-            query = '';
-          }
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () => close(context, null),
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return SearchScreen(initialQuery: query);
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return SearchScreen(initialQuery: query);
+  Future<List<VaultFile>> _getAllNotes() async {
+    return _hiveService.fileBox.values.map((f) => f.toEntity()).toList();
   }
 }

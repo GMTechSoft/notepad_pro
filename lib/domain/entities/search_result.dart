@@ -2,12 +2,14 @@ import 'package:notepad_pro/domain/entities/vault_file.dart';
 
 class SearchResult {
   final VaultFile file;
-  final String snippet;
-  final int matchCount;
+  final Map<String, int> wordCounts;
+  final int totalMatches;
+  final List<String> previewLines;
 
-  SearchResult({
+  const SearchResult({
     required this.file,
-    required this.snippet,
-    required this.matchCount,
+    required this.wordCounts,
+    required this.totalMatches,
+    required this.previewLines,
   });
 }

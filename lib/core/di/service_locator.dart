@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../services/connectivity_service.dart';
 import '../../presentation/blocs/theme/theme_cubit.dart'; // Import ThemeCubit
+import '../../presentation/blocs/selection/selection_cubit.dart';
 import '../../services/hive_service.dart'; // Import HiveService
 import '../../data/repositories/vault_repository_interface.dart'; // Import IVaultRepository
 import '../../data/repositories/vault_repository_impl.dart'; // Import VaultRepositoryImpl
@@ -12,6 +13,7 @@ import '../../presentation/blocs/notes/notes_cubit.dart'; // Import NotesCubit
 import '../../presentation/blocs/sync/sync_cubit.dart'; // Import SyncCubit
 import '../../services/auth/auth_service.dart'; // Import AuthService
 import '../../services/google_drive_sync_service.dart'; // Import GoogleDriveSyncService
+import 'package:flutter/foundation.dart'; // debugPrint import
 import 'package:notepad_pro/data/models/folder_model.dart';
 import 'package:notepad_pro/data/models/vault_file_model.dart';
 import 'package:notepad_pro/data/models/note_model.dart'; // Import NoteModel
@@ -27,7 +29,10 @@ Future<void> setupServiceLocator({
   required Box<dynamic> appSettingsBox,
   required Box<dynamic> offlineModeBox,
 }) async {
-  // Register HiveService
+  // Register HiveService with debug checks
+  assert(!sl.isRegistered<HiveService>(), 'HiveService already registered');
+  debugPrint('setupServiceLocator: Registering HiveService');
+    debugPrint(StackTrace.current.toString());
   sl.registerLazySingleton<HiveService>(() => HiveService(
         folderBox: folderBox,
         fileBox: fileBox,
@@ -56,7 +61,7 @@ Future<void> setupServiceLocator({
   );
   // Register IVaultRepository
   sl.registerLazySingleton<IVaultRepository>(
-    () => VaultRepositoryImpl(sl()), // Inject HiveService
+    () => VaultRepositoryImpl(sl(), sl()), // Inject HiveService and GoogleDriveSyncService
   );
 
   // Register INoteRepository
@@ -77,6 +82,10 @@ Future<void> setupServiceLocator({
   // Register NotesCubit
   sl.registerFactory<NotesCubit>(
     () => NotesCubit(sl(), sl()), // Inject INoteRepository and SyncCubit
+  );
+
+  sl.registerFactory<SelectionCubit>(
+    () => SelectionCubit(),
   );
 
   // Register SyncCubit

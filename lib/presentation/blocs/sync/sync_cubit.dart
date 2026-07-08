@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
+import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/services/auth/auth_service.dart';
 import 'package:notepad_pro/services/google_drive_sync_service.dart';
 import 'package:notepad_pro/services/hive_service.dart';
@@ -75,6 +78,12 @@ class SyncCubit extends Cubit<SyncState> {
       totalFiles: totalCount,
       driveFiles: totalSyncedCount,
     ));
+
+    try {
+      _hiveService.appSettingsBox.put('cloud_backup_count', totalSyncedCount);
+    } catch (e) {
+      debugPrint('Sync settings write error: $e');
+    }
   }
 
   @override
@@ -189,13 +198,19 @@ class SyncCubit extends Cubit<SyncState> {
     }
   }
 
-  Future<void> restoreNow() async {
+  Future<void> restoreNow({BuildContext? context}) async {
     if (_isSyncing) return;
     _isSyncing = true;
 
     emit(state.copyWith(status: SyncStatus.pending));
     try {
       await _syncService.restoreBackupFromDrive();
+      await _hiveService.refreshBoxes();
+
+      if (context != null && context.mounted) {
+        await context.read<FoldersCubit>().loadFolders();
+        await context.read<FilesCubit>().loadFiles();
+      }
       
       final now = DateTime.now();
       _updateLocalCounts();
@@ -227,9 +242,9 @@ class SyncCubit extends Cubit<SyncState> {
     await backupNow();
   }
 
-  void syncNow() {
+  Future<void> syncNow() async {
     if (state.status == SyncStatus.signedOut) return;
-    backupNow();
+    await backupNow();
   }
 
   void toggleAutoSync(bool value) {

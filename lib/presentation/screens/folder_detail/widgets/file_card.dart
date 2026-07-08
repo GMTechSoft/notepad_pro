@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
@@ -109,6 +110,8 @@ class FileCard extends StatelessWidget {
                   context.push('/create-file', extra: file);
                 } else if (value == 'delete') {
                   _showDeleteDialog(context);
+                } else if (value == 'move') {
+                  context.push('/move-item', extra: [file]);
                 }
               },
               itemBuilder: (context) => [
@@ -125,6 +128,14 @@ class FileCard extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(Icons.delete_outline, color: Colors.red),
                     title: Text('Delete', style: TextStyle(color: Colors.red)),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'move',
+                  child: ListTile(
+                    leading: Icon(Icons.drive_file_move_outline, color: Color(0xFF6C5CE7)),
+                    title: Text('Move to folder'),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),

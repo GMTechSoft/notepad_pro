@@ -8,12 +8,13 @@ import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';
 import 'package:notepad_pro/data/models/folder_model.dart';
 import 'package:notepad_pro/data/models/note_model.dart';
+import 'package:notepad_pro/data/models/vault_file_model.dart';
 import 'package:notepad_pro/services/hive_service.dart';
 import 'package:notepad_pro/services/auth/auth_service.dart';
 
 /// A flawless, production-ready Google Drive Sync Service for Hive.
-/// Handles hierarchical folder structures and note streams with strict
-/// type enforcement and explicit media execution.
+/// Handles hierarchical folder structures and asset streams with strict
+/// type enforcement and nested child placement logic.
 class GoogleDriveSyncService {
   final AuthService _authService;
   final HiveService _hiveService;
@@ -53,7 +54,7 @@ class GoogleDriveSyncService {
   Future<void> uploadBackupToDrive() async {
     try {
       _progressController.add(0.0);
-      debugPrint('[DriveSync] Starting backup sequence...');
+      debugPrint('[DriveSync] Starting hierarchical backup sequence...');
 
       // Step A: Authenticate
       final driveApi = await _getDriveApi();
@@ -74,14 +75,15 @@ class GoogleDriveSyncService {
       debugPrint('[DriveSync] Uncategorized Folder: $uncategorizedFolderId');
       _progressController.add(0.1);
 
-      // Fetch all local Hive data
+      // Fetch all local Hive data (FIX: Added localFiles to recovery matrix)
       final localFolders = await _hiveService.getFolders();
       final localNotes = await _hiveService.getNotes();
+      final localFiles = await _hiveService.getFiles();
 
       // Tracker: localHiveId.toString() -> DriveFolderId
       final Map<String, String> localToDriveFolderMap = {};
 
-      // Step D: Hierarchical Folder Mapping Loop (EXECUTIVE PHASE 1)
+      // Step D: Hierarchical Folder Mapping Loop (STRICT TREE PATTERN)
       debugPrint('[DriveSync] Syncing folder hierarchy...');
 
       Future<String> syncFolder(FolderModel folder) async {
@@ -90,11 +92,13 @@ class GoogleDriveSyncService {
           return localToDriveFolderMap[localId]!;
         }
 
+        // FIXED: Enforce clear, strict hierarchical parent verification mapping
         String parentDriveId = appRootFolderId;
-        if (folder.parentId != null) {
+        if (folder.parentId != null && folder.parentId!.toString().isNotEmpty) {
           final parentFolder = localFolders.firstWhereOrNull(
-              (f) => f.id.toString() == folder.parentId.toString());
+              (f) => f.id.toString() == folder.parentId!.toString());
           if (parentFolder != null) {
+            // Recurse to guarantee that the parent exists on Drive first
             parentDriveId = await syncFolder(parentFolder);
           }
         }
@@ -105,44 +109,47 @@ class GoogleDriveSyncService {
         return driveId;
       }
 
-      // COMPLETELY finish folder sync before notes
+      // COMPLETELY finish folder tree sync before moving content arrays
       for (int i = 0; i < localFolders.length; i++) {
         await syncFolder(localFolders[i]);
         if (localFolders.isNotEmpty) {
-          _progressController.add(0.1 + (0.4 * (i + 1) / localFolders.length));
+          _progressController.add(0.1 + (0.3 * (i + 1) / localFolders.length));
         }
       }
       debugPrint('[DriveSync] Folder mapping finished. Count: ${localToDriveFolderMap.length}');
 
-      // Step E: Note Upload Loop with Safe Media Streams (EXECUTIVE PHASE 2)
-      debugPrint('[DriveSync] Syncing notes...');
-      for (int i = 0; i < localNotes.length; i++) {
-        final note = localNotes[i];
+      // Step E: Content Processing stream (Combines Notes and VaultFiles)
+      final allItems = [
+        ...localNotes.map((n) => {'type': 'note', 'id': n.id, 'folderId': n.folderId, 'name': 'note_${n.id}.json', 'map': Map<String, dynamic>.from(n.toMap())..['__type'] = 'note'}),
+        ...localFiles.map((f) => {'type': 'file', 'id': f.id, 'folderId': f.folderId, 'name': 'file_${f.id}.json', 'map': Map<String, dynamic>.from(f.toJson())..['__type'] = 'file'}),
+      ];
 
-        // Determine destination with strict fallback
+      debugPrint('[DriveSync] Syncing payload items...');
+      for (int i = 0; i < allItems.length; i++) {
+        final item = allItems[i];
+        final String? itemFolderId = item['folderId'] as String?;
+
+        // Determine target layout matching parent directory signatures
         String? targetDriveFolderId;
-        if (note.folderId != null) {
-          targetDriveFolderId = localToDriveFolderMap[note.folderId.toString()];
+        if (itemFolderId != null && itemFolderId.isNotEmpty) {
+          targetDriveFolderId = localToDriveFolderMap[itemFolderId.toString()];
         }
 
-        // FORCE non-null target parent
         final String destinationId = targetDriveFolderId ?? uncategorizedFolderId;
-
-        final Map<String, dynamic> noteMap = Map<String, dynamic>.from(note.toMap());
-        final List<int> noteBytes = utf8.encode(jsonEncode(noteMap));
+        final List<int> itemBytes = utf8.encode(jsonEncode(item['map']));
 
         final driveFile = ga.File()
-          ..name = 'note_${note.id}.json'
+          ..name = item['name'] as String
           ..mimeType = 'application/json'
           ..parents = [destinationId];
 
         final media = ga.Media(
-          Stream.value(noteBytes),
-          noteBytes.length, // Mandatory for Google API stream processing
+          Stream.value(itemBytes),
+          itemBytes.length,
           contentType: 'application/json',
         );
 
-        // Deduplication check: exists in target folder?
+        // Deduplication boundary matching
         final query = "name = '${_escapeQuery(driveFile.name!)}' and "
             "'${_escapeQuery(destinationId)}' in parents and "
             "trashed = false";
@@ -154,14 +161,12 @@ class GoogleDriveSyncService {
             existing.files!.first.id!,
             uploadMedia: media,
           );
-          debugPrint('[DriveSync] Updated: ${driveFile.name}');
         } else {
           await driveApi.files.create(driveFile, uploadMedia: media);
-          debugPrint('[DriveSync] Created: ${driveFile.name}');
         }
 
-        if (localNotes.isNotEmpty) {
-          _progressController.add(0.5 + (0.5 * (i + 1) / localNotes.length));
+        if (allItems.isNotEmpty) {
+          _progressController.add(0.4 + (0.6 * (i + 1) / allItems.length));
         }
       }
 
@@ -195,14 +200,15 @@ class GoogleDriveSyncService {
         throw Exception("Restore failed: 'Smart_Notes_Backup_Root' not found on Drive.");
       }
 
-      // Step 1: Nuclear clear
+      // Step 1: Nuclear clear local structures
       await _hiveService.clearAllData();
       await _hiveService.noteBox.clear();
       await _hiveService.folderBox.clear();
-      debugPrint('[DriveSync] Local state cleared for fresh restore.');
+      await _hiveService.fileBox.clear();
+      debugPrint('[DriveSync] Local boxes wiped for synchronization recovery.');
       _progressController.add(0.1);
 
-      // Step 2: Fetch all folders to reconstruct structure
+      // Step 2: Fetch all remote folders to build structural references
       final allFilesResult = await driveApi.files.list(
         q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
         spaces: 'drive',
@@ -213,7 +219,7 @@ class GoogleDriveSyncService {
       // Tracking: DriveFolderId -> newLocalHiveId
       final Map<String, String> driveToHiveFolderMap = {appRootFolderId: 'ROOT'};
 
-      // Step 3: Reconstruct directory tree downwards
+      // Step 3: Reconstruct tree top-down
       Future<void> reconstructFolders(String currentDriveId, String? localParentId) async {
         final children = driveFolders.where((f) => f.parents?.contains(currentDriveId) ?? false);
 
@@ -241,11 +247,10 @@ class GoogleDriveSyncService {
       }
 
       await reconstructFolders(appRootFolderId, null);
-      debugPrint('[DriveSync] Local folder tree reconstructed.');
+      debugPrint('[DriveSync] Folder directory structure mapped completely.');
       _progressController.add(0.4);
 
-      // Step 4: Search specifically for JSON note files
-      debugPrint('[DriveSync] Querying JSON files from Drive...');
+      // Step 4: Search for JSON payload records
       final filesResult = await driveApi.files.list(
         q: "mimeType = 'application/json' and trashed = false",
         spaces: 'drive',
@@ -253,12 +258,11 @@ class GoogleDriveSyncService {
       );
       final List<ga.File> noteFiles = filesResult.files ?? [];
 
-      // Step 5: Full stream download and local save
+      // Step 5: Full stream download mapping block
       for (int i = 0; i < noteFiles.length; i++) {
         final file = noteFiles[i];
 
         try {
-          // Download raw bytes stream
           final ga.Media response = await driveApi.files.get(
             file.id!,
             downloadOptions: ga.DownloadOptions.fullMedia,
@@ -267,36 +271,69 @@ class GoogleDriveSyncService {
           final List<int> bytes = await _readAllBytes(response.stream);
           final String content = utf8.decode(bytes);
           final dynamic jsonData = jsonDecode(content);
-          final Map<String, dynamic> noteMap = Map<String, dynamic>.from(jsonData as Map);
 
-          final sourceNote = NoteModel.fromJson(noteMap);
+          if (jsonData is Map<String, dynamic>) {
+            // Map parent Drive ID to fresh Hive UUID securely
+            String? localFolderId;
+            if (file.parents != null && file.parents!.isNotEmpty) {
+              final String parentDriveId = file.parents!.first;
+              final String? mappedId = driveToHiveFolderMap[parentDriveId];
+              if (mappedId != null && mappedId != 'ROOT' && mappedId != 'UNCATEGORIZED') {
+                localFolderId = mappedId;
+              }
+            }
 
-          // Map parent Drive ID to fresh Hive ID
-          String? localFolderId;
-          if (file.parents != null && file.parents!.isNotEmpty) {
-            final String parentDriveId = file.parents!.first;
-            final String? mappedId = driveToHiveFolderMap[parentDriveId];
-            if (mappedId != null && mappedId != 'ROOT' && mappedId != 'UNCATEGORIZED') {
-              localFolderId = mappedId;
+            final String itemType = jsonData['__type']?.toString() ?? 
+                (jsonData.containsKey('referenceType') ? 'file' : 'note');
+
+            if (itemType == 'file') {
+              // ---------- VaultFileModel restoration ----------
+              final fileMap = Map<String, dynamic>.from(jsonData);
+              final sourceFile = VaultFileModel.fromJson(fileMap);
+
+              final restoredFile = VaultFileModel(
+                id: sourceFile.id,
+                folderId: localFolderId,
+                title: sourceFile.title,
+                description: sourceFile.description,
+                referenceType: sourceFile.referenceType,
+                videoTitle: sourceFile.videoTitle,
+                videoRefHours: sourceFile.videoRefHours,
+                videoRefMinutes: sourceFile.videoRefMinutes,
+                videoRefSeconds: sourceFile.videoRefSeconds,
+                bookName: sourceFile.bookName,
+                authorName: sourceFile.authorName,
+                volume: sourceFile.volume,
+                pageNumber: sourceFile.pageNumber,
+                lineNumber: sourceFile.lineNumber,
+                createdAt: sourceFile.createdAt,
+                lastModified: sourceFile.lastModified,
+                driveFileId: file.id,
+                isSynced: true,
+              );
+
+              await _hiveService.addFile(restoredFile);
+            } else {
+              // ---------- NoteModel restoration ----------
+              final noteMap = Map<String, dynamic>.from(jsonData);
+              final sourceNote = NoteModel.fromJson(noteMap);
+
+              final restoredNote = NoteModel(
+                id: sourceNote.id,
+                folderId: localFolderId,
+                title: sourceNote.title,
+                content: sourceNote.content,
+                createdAt: sourceNote.createdAt,
+                updatedAt: sourceNote.updatedAt,
+                driveFileId: file.id,
+                isSynced: true,
+              );
+
+              await _hiveService.noteBox.put(restoredNote.id, restoredNote);
             }
           }
-
-          final restoredNote = NoteModel(
-            id: sourceNote.id,
-            folderId: localFolderId,
-            title: sourceNote.title,
-            content: sourceNote.content,
-            createdAt: sourceNote.createdAt,
-            updatedAt: sourceNote.updatedAt,
-            driveFileId: file.id,
-            isSynced: true,
-          );
-
-          // Force commit to Hive box
-          await _hiveService.noteBox.put(restoredNote.id, restoredNote);
-          debugPrint('[DriveSync] Restored: ${file.name}');
         } catch (e) {
-          debugPrint('[DriveSync] Failed note restoration (${file.name}): $e');
+          debugPrint('[DriveSync] Failed restoration node segment execution: $e');
         }
 
         if (noteFiles.isNotEmpty) {
@@ -304,8 +341,9 @@ class GoogleDriveSyncService {
         }
       }
 
-      // Final initialization reset
+      // Flush buffers and streams reload markers
       await _hiveService.setInitialized(true);
+      await _hiveService.refreshBoxes();
       _hiveService.refresh();
 
       _progressController.add(1.0);

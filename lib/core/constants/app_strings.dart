@@ -1,3 +1,3 @@
 class AppStrings {
-  static const String appName = 'Notepad Pro';
+  static const String appName = 'NotePilot';
 }

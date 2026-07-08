@@ -11,6 +11,9 @@ import 'package:notepad_pro/data/models/note_model.dart';
 import 'package:notepad_pro/data/models/vault_file_model.dart';
 import 'package:notepad_pro/services/hive_service.dart';
 import 'package:notepad_pro/services/auth/auth_service.dart';
+import 'package:notepad_pro/core/di/service_locator.dart';
+import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
+import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
 
 /// A robust, production-ready Google Drive Sync Service for Hive.
 /// Implements deep hierarchical folder sync and structural restore mechanisms.
@@ -55,6 +58,7 @@ class GoogleDriveSyncService {
 
       // A. Root Structure Setup
       final String appRootId = await _getOrCreateDriveFolder(driveApi, 'Smart_Notes_Backup_Root');
+      final String logicalRootId = appRootId; 
       final String uncategorizedId = await _getOrCreateDriveFolder(driveApi, 'Uncategorized Notes', parentId: appRootId);
       _progressController.add(0.1);
 
@@ -69,8 +73,9 @@ class GoogleDriveSyncService {
       Future<String> syncFolder(FolderModel folder) async {
         if (hiveToDriveFolderMap.containsKey(folder.id)) return hiveToDriveFolderMap[folder.id]!;
 
-        String parentDriveId = appRootId;
-        if (folder.parentId != null) {
+        String parentDriveId = logicalRootId;
+
+        if (folder.parentId != null && folder.parentId!.isNotEmpty) {
           final parentFolder = localFolders.firstWhereOrNull((f) => f.id == folder.parentId);
           if (parentFolder != null) {
             parentDriveId = await syncFolder(parentFolder);
@@ -78,16 +83,19 @@ class GoogleDriveSyncService {
         }
 
         final folderJson = jsonEncode(folder.toJson());
-        final driveId = await _getOrCreateDriveFolder(driveApi, folder.name, parentId: parentDriveId, description: folderJson);
-        hiveToDriveFolderMap[folder.id] = driveId;
 
-        // Update local folder with Drive ID if changed
-        if (folder.driveFileId != driveId) {
+        if (folder.driveFileId != null && folder.driveFileId!.isNotEmpty) {
+          await _updateDriveFolderParentAndMetadata(driveApi, folder.driveFileId!, folder.name, parentDriveId, folderJson);
+          hiveToDriveFolderMap[folder.id] = folder.driveFileId!;
+        } else {
+          final driveId = await _getOrCreateDriveFolder(driveApi, folder.name, parentId: parentDriveId, description: folderJson);
+          hiveToDriveFolderMap[folder.id] = driveId;
           await _hiveService.updateFolder(folder.copyWith(driveFileId: driveId, isSynced: true));
         }
-        return driveId;
+        return hiveToDriveFolderMap[folder.id]!;
       }
 
+      // FIXED: Extra closing brace removed so code flows perfectly inside the method
       for (int i = 0; i < localFolders.length; i++) {
         await syncFolder(localFolders[i]);
         _progressController.add(0.1 + (0.2 * (i + 1) / (localFolders.isEmpty ? 1 : localFolders.length)));
@@ -121,13 +129,28 @@ class GoogleDriveSyncService {
           jsonMap = file.toJson()..['__type'] = 'file';
         }
 
-        final String targetDriveId = (folderId != null && folderId.isNotEmpty)
-            ? (hiveToDriveFolderMap[folderId] ?? uncategorizedId)
-            : uncategorizedId;
+        final String parentDriveId = (folderId == null || folderId.isEmpty)
+            ? uncategorizedId
+            : (hiveToDriveFolderMap[folderId] ?? uncategorizedId);
 
-        await _uploadJsonFile(driveApi, fileName, jsonMap, targetDriveId);
+        final String? existingFileId = (type == 'note')
+            ? (data as NoteModel).driveFileId
+            : (data as VaultFileModel).driveFileId;
+
+        final String driveId = await _moveAndUpdateJsonFile(driveApi, fileName, jsonMap, parentDriveId, existingFileId);
+
+        if (type == 'note') {
+          await _hiveService.updateNote((data as NoteModel).copyWith(driveFileId: driveId, isSynced: true));
+        } else {
+          await _hiveService.updateFile((data as VaultFileModel).copyWith(driveFileId: driveId, isSynced: true));
+        }
+
         _progressController.add(0.3 + (0.7 * (i + 1) / (allItems.isEmpty ? 1 : allItems.length)));
       }
+
+      // Force Cubits state reload after new item insertion/sync to avoid local reference Gray Screen crashes
+      sl<FoldersCubit>().loadFolders();
+      sl<FilesCubit>().loadFiles();
 
       _progressController.add(1.0);
       debugPrint('[DriveSync] Backup completed successfully.');
@@ -137,7 +160,31 @@ class GoogleDriveSyncService {
     }
   }
 
-  Future<void> _uploadJsonFile(ga.DriveApi api, String name, Map<String, dynamic> data, String parentId) async {
+  Future<String> _moveAndUpdateJsonFile(ga.DriveApi api, String name, Map<String, dynamic> data, String parentId, String? existingFileId) async {
+    final List<int> bytes = utf8.encode(jsonEncode(data));
+    final media = ga.Media(Stream.value(bytes), bytes.length, contentType: 'application/json');
+
+    if (existingFileId != null && existingFileId.isNotEmpty) {
+      try {
+        final file = await api.files.get(existingFileId) as ga.File;
+        final oldParents = file.parents?.join(',') ?? '';
+
+        await api.files.update(ga.File(), existingFileId, uploadMedia: media);
+
+        if (oldParents != parentId) {
+          await api.files.update(ga.File(), existingFileId, addParents: parentId, removeParents: oldParents);
+        }
+
+        return existingFileId;
+      } catch (e) {
+        debugPrint('[DriveSync] Failed to update existing file $existingFileId, falling back: $e');
+      }
+    }
+
+    return await _uploadJsonFile(api, name, data, parentId);
+  }
+
+  Future<String> _uploadJsonFile(ga.DriveApi api, String name, Map<String, dynamic> data, String parentId) async {
     final List<int> bytes = utf8.encode(jsonEncode(data));
     final media = ga.Media(Stream.value(bytes), bytes.length, contentType: 'application/json');
 
@@ -149,9 +196,20 @@ class GoogleDriveSyncService {
     final existingId = await _findDriveFile(api, name, parentId: parentId);
     if (existingId != null) {
       await api.files.update(ga.File(), existingId, uploadMedia: media);
-    } else {
-      await api.files.create(driveFile, uploadMedia: media);
+      return existingId;
     }
+
+    final globalExistingId = await _findDriveFile(api, name);
+    if (globalExistingId != null) {
+      await api.files.update(ga.File(), globalExistingId, uploadMedia: media);
+      final existingFile = await api.files.get(globalExistingId) as ga.File;
+      final oldParents = existingFile.parents?.join(',') ?? '';
+      await api.files.update(ga.File(), globalExistingId, addParents: parentId, removeParents: oldParents);
+      return globalExistingId;
+    }
+
+    final created = await api.files.create(driveFile, uploadMedia: media);
+    return created.id!;
   }
 
   // ===========================================================================
@@ -167,27 +225,22 @@ class GoogleDriveSyncService {
       if (driveApi == null) throw Exception("Google Drive Authentication failed.");
       _progressController.add(0.05);
 
-      // A. Nuclear Clear
       await _hiveService.clearAllData();
       debugPrint('[DriveSync] Local state wiped.');
 
-      // B. Identify Root
       final String? appRootId = await _findDriveFolder(driveApi, 'Smart_Notes_Backup_Root');
       if (appRootId == null) throw Exception("Restore source 'Smart_Notes_Backup_Root' not found on Drive.");
 
-      // C. Fetch all folders first for efficiency
       final allDriveFolders = await _listAllFolders(driveApi);
       
-      // D. Reconstruct Folders (Top-Down)
-      // Map: DriveFolderId -> LocalFolderId
-      final Map<String, String> driveToLocalFolderMap = {appRootId: 'ROOT'};
+      final Map<String, String?> driveToLocalFolderMap = {appRootId: null};
 
       Future<void> buildTree(String currentDriveId, String? currentLocalParentId) async {
         final children = allDriveFolders.where((f) => f.parents?.contains(currentDriveId) ?? false).toList();
 
         for (final driveFolder in children) {
           if (driveFolder.name == 'Uncategorized Notes' && currentLocalParentId == null) {
-            driveToLocalFolderMap[driveFolder.id!] = 'UNCATEGORIZED';
+            driveToLocalFolderMap[driveFolder.id!] = null;
             continue;
           }
 
@@ -204,7 +257,6 @@ class GoogleDriveSyncService {
                 isSynced: true,
               );
             } catch (e) {
-              debugPrint('[DriveSync] Failed to parse folder metadata for ${driveFolder.name}: $e');
               folder = FolderModel(
                 id: localId,
                 name: driveFolder.name!,
@@ -230,27 +282,21 @@ class GoogleDriveSyncService {
           await _hiveService.addFolder(folder);
           driveToLocalFolderMap[driveFolder.id!] = localId;
           
-          // Recursive descent
           await buildTree(driveFolder.id!, localId);
         }
       }
 
       await buildTree(appRootId, null);
-      debugPrint('[DriveSync] Folder hierarchy restored.');
       _progressController.add(0.4);
 
-      // E. Content Injection (Per Folder)
-      // List all JSON files once for performance
       final allJsonFiles = await _listAllJsonFiles(driveApi);
       
       for (int i = 0; i < allJsonFiles.length; i++) {
         final file = allJsonFiles[i];
         final String? parentDriveId = file.parents?.firstOrNull;
         
-        // Ensure this file belongs to one of our tracked folders
         if (parentDriveId != null && driveToLocalFolderMap.containsKey(parentDriveId)) {
-          final String? localFolderId = driveToLocalFolderMap[parentDriveId];
-          final String finalFolderId = (localFolderId == 'ROOT' || localFolderId == 'UNCATEGORIZED' || localFolderId == null) ? '' : localFolderId;
+          final String? finalFolderId = driveToLocalFolderMap[parentDriveId];
 
           try {
             final content = await _downloadJson(driveApi, file.id!);
@@ -280,13 +326,15 @@ class GoogleDriveSyncService {
       }
 
       await _hiveService.setInitialized(true);
-      _hiveService.refresh();
+      await _hiveService.refreshBoxes();
+
+      // Broadcast structural updates after full restoration block
+      sl<FoldersCubit>().loadFolders();
+      sl<FilesCubit>().loadFiles();
 
       _progressController.add(1.0);
       if (onComplete != null) onComplete();
-      debugPrint('[DriveSync] Full restoration complete.');
     } catch (e) {
-      debugPrint('[DriveSync] Restore Error: $e');
       rethrow;
     }
   }
@@ -297,13 +345,28 @@ class GoogleDriveSyncService {
 
   Future<String> _getOrCreateDriveFolder(ga.DriveApi api, String name, {String? parentId, String? description}) async {
     final existingFolder = await _findDriveFolderFull(api, name, parentId: parentId);
-    
     if (existingFolder != null) {
       if (description != null && existingFolder.description != description) {
         final updateFile = ga.File()..description = description;
         await api.files.update(updateFile, existingFolder.id!);
       }
       return existingFolder.id!;
+    }
+
+    final globalFolder = await _findDriveFolderFull(api, name);
+    if (globalFolder != null && parentId != null) {
+      final existingFile = await api.files.get(globalFolder.id!) as ga.File;
+      final oldParents = existingFile.parents?.join(',') ?? '';
+      await api.files.update(
+        ga.File(),
+        globalFolder.id!,
+        addParents: parentId,
+        removeParents: oldParents,
+      );
+      if (description != null && globalFolder.description != description) {
+        await api.files.update(ga.File()..description = description, globalFolder.id!);
+      }
+      return globalFolder.id!;
     }
 
     final folder = ga.File()
@@ -314,6 +377,28 @@ class GoogleDriveSyncService {
 
     final created = await api.files.create(folder);
     return created.id!;
+  }
+
+  Future<void> _updateDriveFolderParentAndMetadata(ga.DriveApi api, String folderId, String name, String newParentId, String? description) async {
+    try {
+      final existingFile = await api.files.get(folderId) as ga.File;
+      final oldParents = existingFile.parents?.join(',') ?? '';
+      await api.files.update(
+        ga.File(),
+        folderId,
+        addParents: newParentId,
+        removeParents: oldParents,
+      );
+      if (description != null) {
+        await api.files.update(ga.File()..description = description, folderId);
+      }
+    } catch (e) {
+      final folder = (await _hiveService.getFolders()).firstWhereOrNull((f) => f.driveFileId == folderId);
+      if (folder != null) {
+        await _hiveService.updateFolder(folder.copyWith(isSynced: false));
+      }
+      rethrow;
+    }
   }
 
   Future<ga.File?> _findDriveFolderFull(ga.DriveApi api, String name, {String? parentId}) async {

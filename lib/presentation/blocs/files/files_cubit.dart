@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/data/repositories/vault_repository_interface.dart';
@@ -40,15 +41,24 @@ class FilesCubit extends Cubit<FilesState> {
   final IVaultRepository _vaultRepository;
   final SyncCubit _syncCubit;
 
+  // Store information about the most recent move for undo
+  String? _lastMovedItemId;
+  String? _lastOldParentId;
+  String? _lastNewParentId;
+
   FilesCubit(this._vaultRepository, this._syncCubit) : super(FilesInitial());
 
   Future<void> loadFiles() async {
     emit(FilesLoadInProgress());
+    debugPrint('FilesCubit state after emit: ${this.state.runtimeType}');
     try {
       final allFiles = await _vaultRepository.getAllFiles();
+      debugPrint('Stage 3: FilesCubit loaded ${allFiles.length} files');
       emit(FilesLoadSuccess(allFiles));
+    debugPrint('FilesCubit state after emit: ${this.state.runtimeType} (files count=${allFiles.length})');
     } catch (e) {
       emit(FilesLoadFailure(e.toString()));
+    debugPrint('FilesCubit state after emit: ${this.state.runtimeType} (error=${e.toString()})');
     }
   }
 
@@ -84,7 +94,7 @@ class FilesCubit extends Cubit<FilesState> {
         lineNumber: lineNumber,
       );
       // After creating, re-fetch all files to ensure UI consistency
-      await loadFiles();
+      await loadFilesForFolder(folderId);
       _syncCubit.performAutoSync();
     } catch (e) {
       emit(FilesLoadFailure(e.toString()));
@@ -110,5 +120,78 @@ class FilesCubit extends Cubit<FilesState> {
       emit(FilesLoadFailure(e.toString()));
     }
   }
-}
 
+  // Move any item (file or folder) to a new parent folder
+  Future<void> moveItem({required String itemId, required String? targetFolderId}) async {
+    try {
+      // Record current parent before moving for undo
+      final allFiles = await _vaultRepository.getAllFiles();
+      // Safely locate the file; if not found, treat as folder move (oldParentId will be null)
+      VaultFile? file;
+      try {
+        file = allFiles.firstWhere((f) => f.id == itemId);
+      } catch (_) {
+        file = null; // Not a file, likely a folder
+      }
+      String? oldParentId = file?.folderId;
+      // For folders, need to fetch separately (simplified: assume folders are moved via same method)
+      // Store move info
+      _lastMovedItemId = itemId;
+      _lastOldParentId = oldParentId;
+      _lastNewParentId = targetFolderId;
+
+      await _vaultRepository.moveItem(itemId: itemId, newParentFolderId: targetFolderId);
+      await loadFiles();
+      // Trigger sync asynchronously
+      Future(() => _syncCubit.performAutoSync());
+    } catch (e) {
+      emit(FilesLoadFailure(e.toString()));
+    }
+  }
+
+  // Undo the most recent move operation
+  Future<void> undoLastMove() async {
+    if (_lastMovedItemId == null) {
+      // Nothing to undo
+      return;
+    }
+    try {
+      await _vaultRepository.moveItem(itemId: _lastMovedItemId!, newParentFolderId: _lastOldParentId);
+      // Clear undo info after successful undo
+      _lastMovedItemId = null;
+      _lastOldParentId = null;
+      _lastNewParentId = null;
+      await loadFiles();
+      Future(() => _syncCubit.performAutoSync());
+    } catch (e) {
+      emit(FilesLoadFailure(e.toString()));
+    }
+  }
+
+  // Updated moveFileToFolder: instantly updates UI and triggers background sync
+  Future<void> moveFileToFolder({required String fileId, required String? targetFolderId}) async {
+    try {
+      await _vaultRepository.moveFileToFolder(fileId: fileId, targetFolderId: targetFolderId);
+      await loadFiles();
+      // Trigger sync without awaiting to avoid blocking UI
+      Future(() => _syncCubit.performAutoSync());
+    } catch (e) {
+      emit(FilesLoadFailure(e.toString()));
+    }
+  }
+
+  // Load files for a specific folder (root uses null)
+  Future<void> loadFilesForFolder(String? folderId) async {
+    emit(FilesLoadInProgress());
+    debugPrint('FilesCubit state after emit (folder load): ${this.state.runtimeType}');
+    try {
+      final folderFiles = await _vaultRepository.getFiles(folderId);
+      debugPrint('FilesCubit loaded folderId=${folderId ?? "ROOT"} files count=${folderFiles.length}');
+      emit(FilesLoadSuccess(folderFiles));
+    debugPrint('FilesCubit state after emit (folder load): ${this.state.runtimeType} (files count=${folderFiles.length})');
+    } catch (e) {
+      emit(FilesLoadFailure(e.toString()));
+    }
+  }
+
+}

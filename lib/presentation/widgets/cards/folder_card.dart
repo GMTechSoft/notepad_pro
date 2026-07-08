@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:notepad_pro/core/utils/date_formatter.dart';
 import 'package:notepad_pro/domain/entities/folder.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
+import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
-import 'package:notepad_pro/core/utils/date_formatter.dart';
+
+
+
+
+
 
 class FolderCard extends StatelessWidget {
   final Folder folder;
@@ -92,12 +98,18 @@ class FolderCard extends StatelessWidget {
 
             final String itemString = totalItems == 1 ? "1 Item" : "$totalItems Items";
 
+            final isSelected = context.select<SelectionCubit, bool>((c) => c.state.selectedMap.containsKey(folder.id));
+            final isSelectionMode = context.select<SelectionCubit, bool>((c) => c.state.isSelectionMode);
+
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isSelected ? const Color(0xFFEDE9F8) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFE0D9F5), 
+                  width: isSelected ? 1.5 : 0.5
+                ),
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -144,39 +156,59 @@ class FolderCard extends StatelessWidget {
                         fontSize: 10,
                       ),
                     ),
-                    trailing: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          _showEditDialog(context);
-                        } else if (value == 'delete') {
-                          _showDeleteDialog(context);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: ListTile(
-                            leading: Icon(Icons.edit_outlined),
-                            title: Text('Edit'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
+                    trailing: isSelected 
+                      ? const Icon(Icons.check_circle_rounded, color: Color(0xFF6C5CE7), size: 22)
+                      : PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditDialog(context);
+                            } else if (value == 'move') {
+                              context.push('/move-item', extra: [folder]);
+                            } else if (value == 'delete') {
+                              _showDeleteDialog(context);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: ListTile(
+                                leading: Icon(Icons.edit_outlined),
+                                title: Text('Edit'),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'move',
+                              child: ListTile(
+                                leading: Icon(Icons.drive_file_move_outlined, color: Color(0xFF6C5CE7)),
+                                title: Text('Move'),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: ListTile(
+                                leading: Icon(Icons.delete_outline, color: Colors.red),
+                                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
                         ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: ListTile(
-                            leading: Icon(Icons.delete_outline, color: Colors.red),
-                            title: Text('Delete', style: TextStyle(color: Colors.red)),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ],
-                    ),
+                    onLongPress: () {
+                      context.read<SelectionCubit>().toggleSelection(folder.id, true);
+                    },
                     onTap: () async {
-                      await context.push('/folder/${folder.id}');
-                      if (context.mounted) {
-                        context.read<FoldersCubit>().loadFolders();
-                        context.read<FilesCubit>().loadFiles();
+                      if (isSelectionMode) {
+                        context.read<SelectionCubit>().toggleSelection(folder.id, true);
+                      } else {
+                        context.read<SelectionCubit>().clearSelection();
+                        await context.push('/folder/${folder.id}');
+                        if (context.mounted) {
+                          context.read<FoldersCubit>().loadFolders();
+                          context.read<FilesCubit>().loadFiles();
+                        }
                       }
                     },
                   ),

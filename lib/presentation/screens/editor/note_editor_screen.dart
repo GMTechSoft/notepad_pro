@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:notepad_pro/services/export_service.dart';
+import 'package:notepad_pro/domain/entities/vault_file.dart';
+
 import 'package:notepad_pro/core/utils/text_direction_utils.dart';
 import '../../blocs/notes/notes_cubit.dart'; // Corrected import for Cubit
+
 
 class NoteEditorScreen extends StatefulWidget {
   final String noteId;
@@ -36,6 +40,17 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
         _isSaved = false;
       });
     }
+  }
+
+  void _exportCurrentNote() async {
+    final note = VaultFile(
+      id: widget.noteId,
+      title: _titleController.text,
+      description: _contentController.text,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    await ExportService.exportAsTxt(note);
   }
 
   Future<void> _saveNote() async {
@@ -77,6 +92,10 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
       appBar: AppBar(
         title: Text(widget.noteId == 'new' ? 'New Note' : 'Edit Note'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            onPressed: _exportCurrentNote,
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Center(

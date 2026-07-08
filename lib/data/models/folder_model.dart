@@ -4,6 +4,8 @@ import '../../domain/entities/folder.dart'; // Import the Folder entity
 
 part 'folder_model.g.dart';
 
+const Object _sentinel = Object();
+
 @HiveType(typeId: 0)
 class FolderModel extends Equatable { // Renamed to FolderModel
   @HiveField(0)
@@ -57,25 +59,25 @@ class FolderModel extends Equatable { // Renamed to FolderModel
   FolderModel copyWith({ // Renamed to FolderModel
     String? id,
     String? name,
-    String? parentId,
+    Object? parentId = _sentinel,
     DateTime? createdAt,
     DateTime? lastModified, // Renamed from updatedAt
-    int? colorValue,
-    int? lightBgColorValue,
-    int? darkIconColorValue,
-    String? driveFileId,
+    Object? colorValue = _sentinel,
+    Object? lightBgColorValue = _sentinel,
+    Object? darkIconColorValue = _sentinel,
+    Object? driveFileId = _sentinel,
     bool? isSynced,
   }) {
     return FolderModel( // Renamed to FolderModel
       id: id ?? this.id,
       name: name ?? this.name,
-      parentId: parentId ?? this.parentId,
+      parentId: parentId == _sentinel ? this.parentId : parentId as String?,
       createdAt: createdAt ?? this.createdAt,
       lastModified: lastModified ?? this.lastModified, // Renamed from updatedAt
-      colorValue: colorValue ?? this.colorValue,
-      lightBgColorValue: lightBgColorValue ?? this.lightBgColorValue,
-      darkIconColorValue: darkIconColorValue ?? this.darkIconColorValue,
-      driveFileId: driveFileId ?? this.driveFileId,
+      colorValue: colorValue == _sentinel ? this.colorValue : colorValue as int?,
+      lightBgColorValue: lightBgColorValue == _sentinel ? this.lightBgColorValue : lightBgColorValue as int?,
+      darkIconColorValue: darkIconColorValue == _sentinel ? this.darkIconColorValue : darkIconColorValue as int?,
+      driveFileId: driveFileId == _sentinel ? this.driveFileId : driveFileId as String?,
       isSynced: isSynced ?? this.isSynced,
     );
   }

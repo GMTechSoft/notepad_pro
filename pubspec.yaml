@@ -56,7 +56,8 @@ dependencies:
   pdf: ^3.10.10
   printing: ^5.13.2
   archive: ^3.6.1
-  share_plus: 7.2.1
+  share_plus: ^10.0.0
+  open_file: ^3.2.1
   google_fonts: ^8.1.0
 
 dev_dependencies:
@@ -90,7 +91,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-    - assets/icons/
     - assets/fonts/
 
   fonts:

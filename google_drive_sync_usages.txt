@@ -1,0 +1,13 @@
+﻿
+lib\core\di\service_locator.dart:14:import '../../services/google_drive_sync_service.dart'; // Import 
+GoogleDriveSyncService
+lib\core\di\service_locator.dart:53:  // Register GoogleDriveSyncService
+lib\core\di\service_locator.dart:54:  sl.registerLazySingleton<GoogleDriveSyncService>(
+lib\core\di\service_locator.dart:55:    () => GoogleDriveSyncService(sl(), sl()), // Inject AuthService and HiveService
+lib\presentation\blocs\sync\sync_cubit.dart:12:  final GoogleDriveSyncService _syncService;
+lib\services\google_drive_sync_service.dart:17:class GoogleDriveSyncService {
+lib\services\google_drive_sync_service.dart:26:  GoogleDriveSyncService(this._authService, this._hiveService);
+lib\services\sync_service.dart:17:class GoogleDriveSyncService {
+lib\services\sync_service.dart:27:  GoogleDriveSyncService(this._authService, this._hiveService);
+
+
