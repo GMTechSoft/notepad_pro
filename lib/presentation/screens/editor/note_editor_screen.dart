@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notepad_pro/services/export_service.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
-
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 import 'package:notepad_pro/core/utils/text_direction_utils.dart';
 import '../../blocs/notes/notes_cubit.dart'; // Corrected import for Cubit
-
 
 class NoteEditorScreen extends StatefulWidget {
   final String noteId;
@@ -66,14 +65,21 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
           _isSaving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Note Saved!'), duration: Duration(seconds: 1)),
+          SnackBar(
+            content: Text('Note Saved!', style: TextStyle(color: context.isDark ? Colors.black : Colors.white)),
+            duration: const Duration(seconds: 1),
+            backgroundColor: context.primaryColor,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving note: $e')),
+          SnackBar(
+            content: Text('Error saving note: $e', style: const TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -89,23 +95,47 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: Text(widget.noteId == 'new' ? 'New Note' : 'Edit Note'),
+        backgroundColor: context.scaffoldBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: context.primaryColor),
+        title: Text(
+          widget.noteId == 'new' ? 'New Note' : 'Edit Note',
+          style: TextStyle(
+            color: context.primaryText,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined),
+            icon: Icon(Icons.share_outlined, color: context.primaryColor),
             onPressed: _exportCurrentNote,
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Center(
               child: _isSaving 
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(_isSaved ? 'Saved' : 'Unsaved'),
+                ? SizedBox(
+                    width: 16, 
+                    height: 16, 
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
+                    ),
+                  )
+                : Text(
+                    _isSaved ? 'Saved' : 'Unsaved',
+                    style: TextStyle(color: context.subText, fontSize: 12),
+                  ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: Icon(
+              Icons.save,
+              color: (_isSaved || _isSaving) ? context.border : context.primaryColor,
+            ),
             onPressed: (_isSaved || _isSaving) ? null : _saveNote,
           ),
         ],
@@ -116,11 +146,15 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              cursorColor: context.primaryColor,
+              decoration: InputDecoration(
                 hintText: 'Title',
+                hintStyle: TextStyle(color: context.subText),
                 border: InputBorder.none,
               ),
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: context.primaryText,
+              ),
               textDirection: TextDirectionUtils.getDirection(_titleController.text),
               textAlign: TextDirectionUtils.getTextAlign(_titleController.text),
               onChanged: (_) => setState(() {}),
@@ -129,12 +163,18 @@ class NoteEditorScreenState extends State<NoteEditorScreen> {
             Expanded(
               child: TextField(
                 controller: _contentController,
-                decoration: const InputDecoration(
+                cursorColor: context.primaryColor,
+                decoration: InputDecoration(
                   hintText: 'Content',
+                  hintStyle: TextStyle(color: context.subText),
                   border: InputBorder.none,
                 ),
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
+                style: TextStyle(
+                  color: context.primaryText,
+                  fontSize: 14,
+                ),
                 textDirection: TextDirectionUtils.getDirection(_contentController.text),
                 textAlign: TextDirectionUtils.getTextAlign(_contentController.text),
                 onChanged: (_) => setState(() {}),

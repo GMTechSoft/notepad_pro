@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:notepad_pro/app.dart';
@@ -7,7 +8,7 @@ import 'package:notepad_pro/core/di/service_locator.dart';
 import 'package:notepad_pro/data/models/folder_model.dart';
 import 'package:notepad_pro/data/models/vault_file_model.dart';
 import 'package:notepad_pro/data/models/note_model.dart';
-import 'package:notepad_pro/presentation/blocs/theme/theme_cubit.dart';
+
 
 void main() async {
   // Requirement: Ensure WidgetsFlutterBinding.ensureInitialized() is the very first line
@@ -59,7 +60,10 @@ void main() async {
     // 5. Handle First Run Clean Slate
     await _handleFirstRun(notesSettingsBox, folderBox, fileBox, noteBox);
 
-    await sl<ThemeCubit>().loadFromPrefs();
+    // Remove stored theme preference as it is no longer needed (System theme is used now)
+    if (notesSettingsBox.containsKey('isDark')) {
+      await notesSettingsBox.delete('isDark');
+    }
 
     debugPrint('[Main] Initialization complete.');
   } catch (e, stack) {

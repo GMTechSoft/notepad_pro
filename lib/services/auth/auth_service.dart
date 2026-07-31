@@ -10,7 +10,28 @@ class AuthService {
     ],
   );
 
+  GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
+
   late final Stream<GoogleSignInAccount?> user = _googleSignIn.onCurrentUserChanged.asBroadcastStream();
+
+  Future<bool> validateCurrentUser(GoogleSignInAccount account) async {
+    try {
+      final bool hasScopes = await _googleSignIn.canAccessScopes([
+        'email',
+        'profile',
+        'https://www.googleapis.com/auth/drive.file',
+      ]);
+      if (!hasScopes) {
+        debugPrint('[AuthService] validateCurrentUser: Required scopes are not granted');
+        return false;
+      }
+      await account.authHeaders;
+      return true;
+    } catch (e) {
+      debugPrint('[AuthService] validateCurrentUser: Token validation failed: $e');
+      return false;
+    }
+  }
 
   Future<GoogleSignInAccount?> signInSilently() async {
     try {

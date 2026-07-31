@@ -12,10 +12,9 @@ import 'package:printing/printing.dart';
 
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/core/utils/text_direction_utils.dart';
-import 'package:notepad_pro/services/export_service.dart';
-import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
-import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
+import 'package:notepad_pro/services/export_service.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class ReadNoteScreen extends StatefulWidget {
   final VaultFile file;
@@ -238,7 +237,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
       spans.add(TextSpan(
         text: remaining.substring(earliest, earliest + matchedToken.length), 
         style: baseStyle.copyWith(
-          backgroundColor: color.withOpacity(0.35), 
+          backgroundColor: color.withValues(alpha: 0.35), 
           color: textStyleColor,
           fontWeight: FontWeight.bold
         )
@@ -387,7 +386,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
   Future<void> _handlePrint(VaultFile currentFile) async {
     if (_isFontLoading) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Urdu layout engine tayar ho raha hai, aik lamha rukiye...")),
+        const SnackBar(content: Text("Preparing the Urdu layout. Please wait...")),
       );
       return;
     }
@@ -410,7 +409,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
   void _showExportSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFAFAFF),
+      backgroundColor: context.scaffoldBg,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => StatefulBuilder(
@@ -423,9 +422,9 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                 Container(
                   margin: const EdgeInsets.only(top: 9, bottom: 4),
                   width: 32, height: 4,
-                  decoration: const BoxDecoration(color: Color(0xFFD0C8E8), borderRadius: BorderRadius.all(Radius.circular(2))),
+                  decoration: BoxDecoration(color: context.border, borderRadius: const BorderRadius.all(Radius.circular(2))),
                 ),
-                const Text("FORMAT CHUNEIN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF9B8DB8), letterSpacing: 0.5)),
+                Text("FORMAT CHUNEIN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: context.subText, letterSpacing: 0.5)),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -452,8 +451,8 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                             _exportNote(_selectedExportFormat);
                           },
                           icon: const Icon(Icons.share_outlined, size: 16),
-                          label: const Text("Export karein"),
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C5CE7), foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          label: const Text("Export"),
+                          style: ElevatedButton.styleFrom(backgroundColor: context.primaryColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -461,8 +460,8 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          style: TextButton.styleFrom(backgroundColor: const Color(0xFFF0EBF8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 11)),
-                          child: const Text("Cancel", style: TextStyle(color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
+                          style: TextButton.styleFrom(backgroundColor: context.highlightBg, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 11)),
+                          child: Text("Cancel", style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w500)),
                         ),
                       ),
                     ],
@@ -494,9 +493,9 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEDE9F8) : const Color(0xFFF8F6FF),
+          color: isSelected ? context.highlightBg : (context.isDark ? const Color(0xFF252033) : const Color(0xFFF8F6FF)),
           borderRadius: BorderRadius.circular(11),
-          border: Border.all(color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFE0D9F5), width: isSelected ? 1 : 0.5),
+          border: Border.all(color: isSelected ? context.primaryColor : context.border, width: isSelected ? 1 : 0.5),
         ),
         child: Row(
           children: [
@@ -510,15 +509,15 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
-                  Text(desc, style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+                  Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.primaryText)),
+                  Text(desc, style: TextStyle(fontSize: 10, color: context.subText)),
                 ],
               ),
             ),
             Container(
               width: 17, height: 17,
-              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFD8D0F0), width: 1.5)),
-              child: isSelected ? const Center(child: Icon(Icons.check, size: 12, color: Color(0xFF6C5CE7))) : null,
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isSelected ? context.primaryColor : context.border, width: 1.5)),
+              child: isSelected ? Center(child: Icon(Icons.check, size: 12, color: context.primaryColor)) : null,
             ),
           ],
         ),
@@ -533,13 +532,13 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
       builder: (_) => Center(
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Color(0xFF6C5CE7))),
-              SizedBox(height: 12),
-              Text("File tayar ho rahi hai...", style: TextStyle(fontSize: 13, color: Color(0xFF2D2540))),
+            children: [
+              CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(context.primaryColor)),
+              const SizedBox(height: 12),
+              Text("Preparing your file...", style: TextStyle(fontSize: 13, color: context.primaryText)),
             ],
           ),
         ),
@@ -548,17 +547,20 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
 
     try {
       final tempDir = await getTemporaryDirectory();
+      if (!mounted) return;
       final safeName = _currentFile.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '').trim().isEmpty
           ? 'note'
           : _currentFile.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '').trim();
 
       if (format == 'txt') {
         await ExportService.exportAsTxt(_currentFile);
-        if (context.mounted) Navigator.pop(context);
+        if (!mounted) return;
+        Navigator.pop(context);
         return;
       } else if (format == 'docx') {
         final filePath = await ExportService.exportAsDocx(_currentFile);
-        if (context.mounted) Navigator.pop(context);
+        if (!mounted) return;
+        Navigator.pop(context);
         if (filePath != null) {
           await OpenFile.open(filePath);
         }
@@ -566,25 +568,27 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
       } else if (format == 'pdf') {
         if (_isFontLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Urdu layout engine tayar ho raha hai, aik lamha rukiye...")),
+            const SnackBar(content: Text("Preparing the Urdu layout. Please wait...")),
           );
           return;
         }
         final docBytes = await generatePdfReport(PdfPageFormat.a4, _currentFile);
+        if (!mounted) return;
         final pdfFile = File('${tempDir.path}/$safeName.pdf');
         await pdfFile.writeAsBytes(docBytes);
+        if (!mounted) return;
         
-        if (context.mounted) Navigator.pop(context);
+        Navigator.pop(context);
         await Future.delayed(const Duration(milliseconds: 200));
-        if (!context.mounted) return;
+        if (!mounted) return;
 
         await Share.shareXFiles([XFile(pdfFile.path, mimeType: 'application/pdf')], subject: _currentFile.title);
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Export nahi hua: ${e.toString()}'),
+          content: Text('Failed to export: ${e.toString()}'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ));
@@ -606,20 +610,20 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
         final isTitleRTL = TextDirectionUtils.getDirection(_currentFile.title) == TextDirection.rtl;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F0FF),
+          backgroundColor: context.scaffoldBg,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: context.cardBg,
             elevation: 0,
-            leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF6C5CE7)), onPressed: () => context.pop()),
+            leading: IconButton(icon: Icon(Icons.arrow_back, color: context.primaryColor), onPressed: () => context.pop()),
             title: _buildSyncedMultiHighlight(
               text: _currentFile.title, 
-              baseStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)), 
+              baseStyle: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: context.primaryText), 
               textDirection: TextDirectionUtils.getDirection(_currentFile.title),
               textAlign: TextAlign.left
             ),
             actions: [
-              IconButton(icon: const Icon(Icons.print_outlined, color: Color(0xFF6C5CE7)), onPressed: () => _handlePrint(_currentFile)),
-              IconButton(icon: const Icon(Icons.edit_outlined, color: Color(0xFF6C5CE7)), onPressed: () => context.push('/create-file', extra: _currentFile)),
+              IconButton(icon: Icon(Icons.print_outlined, color: context.primaryColor), onPressed: () => _handlePrint(_currentFile)),
+              IconButton(icon: Icon(Icons.edit_outlined, color: context.primaryColor), onPressed: () => context.push('/create-file', extra: _currentFile)),
             ],
           ),
           body: SingleChildScrollView(
@@ -628,7 +632,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5)),
+              decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.border, width: 0.5)),
               child: Column(
                 crossAxisAlignment: textDirection == TextDirection.rtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
@@ -636,13 +640,13 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: context.highlightBg, borderRadius: BorderRadius.circular(8)),
                       child: Row(
                         children: [
-                          Expanded(child: Text('"${_activeQuery}" - $_totalMatches matches', style: const TextStyle(fontSize: 12, color: Color(0xFF6C5CE7)))),
-                          IconButton(icon: const Icon(Icons.chevron_left, size: 20, color: Color(0xFF6C5CE7)), onPressed: _prevMatch),
-                          IconButton(icon: const Icon(Icons.chevron_right, size: 20, color: Color(0xFF6C5CE7)), onPressed: _nextMatch),
-                          IconButton(icon: const Icon(Icons.close, size: 20, color: Color(0xFF6C5CE7)), onPressed: _clearHighlight),
+                          Expanded(child: Text('"$_activeQuery" - $_totalMatches matches', style: TextStyle(fontSize: 12, color: context.primaryColor))),
+                          IconButton(icon: Icon(Icons.chevron_left, size: 20, color: context.primaryColor), onPressed: _prevMatch),
+                          IconButton(icon: Icon(Icons.chevron_right, size: 20, color: context.primaryColor), onPressed: _nextMatch),
+                          IconButton(icon: Icon(Icons.close, size: 20, color: context.primaryColor), onPressed: _clearHighlight),
                         ],
                       ),
                     ),
@@ -650,7 +654,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                   // Title Highlight (Using True Multi-Color Parser)
                   _buildSyncedMultiHighlight(
                     text: _currentFile.title,
-                    baseStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF2D2540)),
+                    baseStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.primaryText),
                     textDirection: TextDirectionUtils.getDirection(_currentFile.title),
                     textAlign: isTitleRTL ? TextAlign.right : TextAlign.left,
                   ),
@@ -659,12 +663,12 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                   // Content Description Highlight (Using True Multi-Color Parser)
                   _buildSyncedMultiHighlight(
                     text: _currentFile.description,
-                    baseStyle: const TextStyle(fontSize: 16, color: Color(0xFF2D2540), height: 1.6),
+                    baseStyle: TextStyle(fontSize: 16, color: context.primaryText, height: 1.6),
                     textDirection: textDirection,
                     textAlign: textAlign,
                   ),
                   const SizedBox(height: 24),
-                  const Divider(color: Color(0xFFE8E2F5), thickness: 0.5),
+                  Divider(color: context.border, thickness: 0.5),
                   const SizedBox(height: 12),
                   _buildReferenceSection(context, _currentFile),
                 ],
@@ -681,7 +685,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                       onPressed: () => context.push('/create-file', extra: _currentFile),
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text("Edit Note"),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C5CE7), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      style: ElevatedButton.styleFrom(backgroundColor: context.primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -690,7 +694,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                       onPressed: () => _handlePrint(_currentFile),
                       icon: const Icon(Icons.print_outlined, size: 18),
                       label: const Text("Print"),
-                      style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF6C5CE7), side: const BorderSide(color: Color(0xFF6C5CE7)), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      style: OutlinedButton.styleFrom(foregroundColor: context.primaryColor, side: BorderSide(color: context.primaryColor), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -699,7 +703,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
                       onPressed: _showExportSheet,
                       icon: const Icon(Icons.share_outlined, size: 18),
                       label: const Text("Export"),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C5CE7), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      style: ElevatedButton.styleFrom(backgroundColor: context.primaryColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                     ),
                   ),
                 ],
@@ -711,39 +715,7 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
     );
   }
 
-  String? _getFolderName(String? folderId) {
-    if (folderId == null) return null;
-    try {
-      final foldersState = context.read<FoldersCubit>().state;
-      if (foldersState is FoldersLoadSuccess) {
-        final matchingFolders = foldersState.folders.where((f) => f.id == folderId);
-        if (matchingFolders.isNotEmpty) {
-          return matchingFolders.first.name;
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
 
-  String _getRelativeDate(DateTime dateTime) {
-    final now = DateTime.now();
-    final diff = now.difference(dateTime);
-
-    if (diff.inDays > 7) {
-      final y = dateTime.year;
-      final m = dateTime.month.toString().padLeft(2, '0');
-      final d = dateTime.day.toString().padLeft(2, '0');
-      return '$y-$m-$d';
-    } else if (diff.inDays >= 1) {
-      return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
-    } else if (diff.inHours >= 1) {
-      return '${diff.inHours} hour${diff.inHours == 1 ? '' : 's'} ago';
-    } else if (diff.inMinutes >= 1) {
-      return '${diff.inMinutes} minute${diff.inMinutes == 1 ? '' : 's'} ago';
-    } else {
-      return 'Just now';
-    }
-  }
 
   Widget _buildReferenceSection(BuildContext context, VaultFile file) {
     String? referenceTitle;
@@ -776,13 +748,13 @@ class _ReadNoteScreenState extends State<ReadNoteScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: const Color(0xFF9B8DB8)),
+            Icon(icon, size: 16, color: context.subText),
             const SizedBox(width: 8),
-            Text(referenceTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF9B8DB8))),
+            Text(referenceTitle, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.subText)),
           ],
         ),
         const SizedBox(height: 4),
-        Text(details ?? "N/A", style: const TextStyle(fontSize: 14, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
+        Text(details ?? "N/A", style: TextStyle(fontSize: 14, color: context.primaryColor, fontWeight: FontWeight.w500)),
       ],
     );
   }

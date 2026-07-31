@@ -6,7 +6,6 @@ class SelectionState {
 
   bool get isSelectionMode => selectedMap.isNotEmpty;
   int get selectedCount => selectedMap.length;
-  // New getters for convenience
   bool get isSelecting => isSelectionMode;
   Set<String> get selectedIds => selectedMap.keys.toSet();
 }
@@ -21,7 +20,11 @@ class SelectionCubit extends Cubit<SelectionState> {
     } else {
       newMap[id] = isFolder;
     }
-    emit(SelectionState(selectedMap: newMap));
+    if (newMap.isEmpty) {
+      clearSelection();
+    } else {
+      emit(SelectionState(selectedMap: newMap));
+    }
   }
 
   void clearSelection() {
@@ -36,6 +39,23 @@ class SelectionCubit extends Cubit<SelectionState> {
     for (final file in files) {
       newMap[file.id] = false;
     }
-    emit(SelectionState(selectedMap: newMap));
+    if (newMap.isEmpty) {
+      clearSelection();
+    } else {
+      emit(SelectionState(selectedMap: newMap));
+    }
+  }
+
+  void keepOnly(List<String> visibleIds) {
+    final newMap = Map<String, bool>.from(state.selectedMap);
+    final initialLength = newMap.length;
+    newMap.removeWhere((id, _) => !visibleIds.contains(id));
+    if (newMap.length != initialLength) {
+      if (newMap.isEmpty) {
+        clearSelection();
+      } else {
+        emit(SelectionState(selectedMap: newMap));
+      }
+    }
   }
 }

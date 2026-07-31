@@ -10,11 +10,6 @@ import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 
-
-
-
-
-
 class FolderCard extends StatelessWidget {
   final Folder folder;
   const FolderCard({super.key, required this.folder});
@@ -79,9 +74,10 @@ class FolderCard extends StatelessWidget {
       builder: (context, foldersState) {
         return BlocBuilder<FilesCubit, FilesState>(
           builder: (context, filesState) {
+            final theme = Theme.of(context);
             final Color stripColor = folder.colorValue != null
                 ? Color(folder.colorValue!)
-                : const Color(0xFF6C5CE7);
+                : theme.colorScheme.primary;
                 
             final Color iconBgColor = folder.lightBgColorValue != null
                 ? Color(folder.lightBgColorValue!)
@@ -104,10 +100,10 @@ class FolderCard extends StatelessWidget {
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFEDE9F8) : Colors.white,
+                color: isSelected ? theme.colorScheme.primaryContainer : theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFE0D9F5), 
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline, 
                   width: isSelected ? 1.5 : 0.5
                 ),
               ),
@@ -141,25 +137,25 @@ class FolderCard extends StatelessWidget {
                     ),
                     title: Text(
                       folder.name, 
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
-                        color: Color(0xFF2D2540),
+                        color: theme.colorScheme.onSurface,
                       ),
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.left,
                     ),
                     subtitle: Text(
                       '$itemString · ${DateFormatter.getFormattedDate(folder.updatedAt)}',
-                      style: const TextStyle(
-                        color: Color(0xFF9B8DB8),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 10,
                       ),
                     ),
                     trailing: isSelected 
-                      ? const Icon(Icons.check_circle_rounded, color: Color(0xFF6C5CE7), size: 22)
+                      ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 22)
                       : PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
+                          icon: Icon(Icons.more_vert, color: theme.colorScheme.outline),
                           onSelected: (value) {
                             if (value == 'edit') {
                               _showEditDialog(context);
@@ -178,11 +174,11 @@ class FolderCard extends StatelessWidget {
                                 contentPadding: EdgeInsets.zero,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'move',
                               child: ListTile(
-                                leading: Icon(Icons.drive_file_move_outlined, color: Color(0xFF6C5CE7)),
-                                title: Text('Move'),
+                                leading: Icon(Icons.drive_file_move_outlined, color: theme.colorScheme.primary),
+                                title: const Text('Move'),
                                 contentPadding: EdgeInsets.zero,
                               ),
                             ),

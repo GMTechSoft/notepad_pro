@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../../data/app_content/about_notepilot_data.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/sync/sync_state.dart';
-import 'package:notepad_pro/presentation/blocs/theme/theme_cubit.dart';
 import 'package:notepad_pro/presentation/screens/settings/about_screen.dart';
 import 'package:notepad_pro/presentation/screens/privacy_policy_screen.dart';
 import 'package:notepad_pro/core/utils/date_formatter.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -16,9 +16,9 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F0FF),
+        backgroundColor: context.scaffoldBg,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
@@ -29,12 +29,12 @@ class SettingsScreen extends StatelessWidget {
               onPressed: () => context.pop(),
             ),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'Settings',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF2D2540),
+                color: context.primaryText,
               ),
             ),
           ],
@@ -46,7 +46,7 @@ class SettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             children: [
               const SizedBox(height: 10),
-              _buildSectionLabel("GOOGLE ACCOUNT"),
+              _buildSectionLabel(context, "GOOGLE ACCOUNT"),
               const SizedBox(height: 10),
               if (state.status == SyncStatus.signedOut)
                 _buildSignedOutCard(context)
@@ -57,36 +57,37 @@ class SettingsScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: _buildInfoBanner(
-                    "Abhi aapka data sirf is device pe save ho raha hai. Sign in karen to backup aur restore options mil jayen ge.",
+                    context,
+                    "Your data is currently stored only on this device. Sign in to enable backup and restore options.",
                   ),
                 ),
               
               if (state.status != SyncStatus.signedOut) ...[
                 const SizedBox(height: 24),
-                _buildSectionLabel("SYNC SETTINGS"),
+                _buildSectionLabel(context, "SYNC SETTINGS"),
                 const SizedBox(height: 10),
                 _buildSyncSettingsCard(context, state),
               ],
 
               const SizedBox(height: 24),
-              _buildSectionLabel("APP SETTINGS"),
+              _buildSectionLabel(context, "APP SETTINGS"),
               const SizedBox(height: 10),
               _buildAppSettingsCard(context),
               
-              const Padding(
-                padding: EdgeInsets.only(top: 24.0, bottom: 16.0),
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0, bottom: 16.0),
                 child: Column(
                   children: [
                     Text(
                       "Developed by",
                       style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF9B8DB8),
+                        color: context.subText,
                         letterSpacing: 0.5,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       "GMTechSoft",
                       style: TextStyle(
                         fontSize: 14,
@@ -105,13 +106,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionLabel(String label) {
+  Widget _buildSectionLabel(BuildContext context, String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF9B8DB8),
+        color: context.subText,
         letterSpacing: 0.5,
       ),
     );
@@ -125,10 +126,10 @@ class SettingsScreen extends StatelessWidget {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: const Color(0xFFEDE9F8),
+          color: context.highlightBg,
           borderRadius: BorderRadius.circular(9),
         ),
-        child: Icon(icon, size: 16, color: const Color(0xFF6C5CE7)),
+        child: Icon(icon, size: 16, color: context.primaryColor),
       ),
     );
   }
@@ -137,9 +138,9 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        border: Border.all(color: context.border, width: 0.5),
       ),
       child: Column(
         children: [
@@ -147,21 +148,21 @@ class SettingsScreen extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFFEDE9F8),
+              color: context.highlightBg,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.cloud_off_outlined, size: 22, color: Color(0xFF6C5CE7)),
+            child: Icon(Icons.cloud_off_outlined, size: 22, color: context.primaryColor),
           ),
           const SizedBox(height: 12),
-          const Text(
-            "Google se connect karein",
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)),
+          Text(
+            "Sign in with Google",
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
           ),
           const SizedBox(height: 6),
-          const Text(
-            "Aapka data Google Drive mein safe rahega. Kabhi bhi sync band kar sakte hain.",
+          Text(
+            "Your data will be securely backed up to Google Drive. You can turn off synchronization at any time.",
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Color(0xFF9B8DB8), height: 1.5),
+            style: TextStyle(fontSize: 11, color: context.subText, height: 1.5),
           ),
           const SizedBox(height: 16),
           InkWell(
@@ -171,9 +172,9 @@ class SettingsScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+                border: Border.all(color: context.border, width: 0.5),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -193,9 +194,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     "Sign in with Google",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                   ),
                 ],
               ),
@@ -207,15 +208,24 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildAccountCard(BuildContext context, SyncState state) {
-    final isPending = state.status == SyncStatus.pending;
     final isError = state.status == SyncStatus.error;
+    
+    String getUploadMessage(int count) {
+      if (count == 0) {
+        return "0 files waiting.";
+      } else if (count == 1) {
+        return "1 file will be automatically uploaded.";
+      } else {
+        return "$count files will be automatically uploaded.";
+      }
+    }
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        border: Border.all(color: context.border, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,21 +256,24 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Text(
                       state.userName ?? "User",
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                     ),
                     Text(
                       state.userEmail ?? "",
-                      style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8)),
+                      style: TextStyle(fontSize: 10, color: context.subText),
                     ),
                   ],
                 ),
               ),
-              _buildStatusBadge(state.status),
+              _buildStatusBadge(context, state.status),
             ],
           ),
           const SizedBox(height: 12),
-          if (isError) ...[
-            _buildErrorBanner(state.errorMessage ?? "Sync failed. Please try again."),
+          if (state.status == SyncStatus.offline) ...[
+            _buildOfflineBanner(context, "You're offline. Changes have been saved locally."),
+            const SizedBox(height: 12),
+          ] else if (isError) ...[
+            _buildErrorBanner(context, _getFriendlyErrorMessage(state.errorMessage)),
             const SizedBox(height: 12),
           ],
           Row(
@@ -269,18 +282,38 @@ class SettingsScreen extends StatelessWidget {
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: isPending ? const Color(0xFFFB8C00) : (isError ? Colors.red : const Color(0xFF1D9E75)),
+                  color: state.status == SyncStatus.pending
+                      ? const Color(0xFFFB8C00)
+                      : (state.status == SyncStatus.error
+                          ? Colors.red
+                          : (state.status == SyncStatus.offline
+                              ? Colors.grey
+                              : (state.status == SyncStatus.syncing
+                                  ? Colors.blue
+                                  : const Color(0xFF1D9E75)))),
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                isPending 
-                  ? "${state.totalFiles - state.driveFiles} files waiting to sync"
-                  : (isError ? "Sync Error" : "Last sync: ${_formatDate(state.lastSync)}"),
+                state.status == SyncStatus.syncing
+                  ? "Syncing files..."
+                  : (state.status == SyncStatus.offline
+                      ? ((state.autoSync && state.offlineSync)
+                          ? "Your changes will sync automatically when you're back online."
+                          : "Your changes are saved locally. Tap 'Backup Now' to sync.")
+                      : (state.status == SyncStatus.error
+                          ? "Sync Error: ${_getFriendlyErrorMessage(state.errorMessage)}"
+                          : (state.pendingFiles > 0
+                              ? "${state.pendingFiles} file${state.pendingFiles == 1 ? '' : 's'} waiting to sync"
+                              : "Last sync: ${_formatDate(state.lastSync)}"))),
                 style: TextStyle(
                   fontSize: 11, 
-                  color: isPending ? const Color(0xFFE65100) : (isError ? Colors.red : const Color(0xFF0F6E56)),
+                  color: state.status == SyncStatus.offline
+                    ? (context.isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100))
+                    : (state.status == SyncStatus.pending 
+                        ? (context.isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)) 
+                        : (state.status == SyncStatus.error ? (context.isDark ? const Color(0xFFEF9A9A) : Colors.red) : (context.isDark ? const Color(0xFF81C784) : const Color(0xFF0F6E56)))),
                 ),
               ),
             ],
@@ -288,21 +321,39 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildStatBox(state.totalFiles.toString(), "Total Files")),
+              Expanded(child: _buildStatBox(context, state.totalFiles.toString(), "Total Files")),
+              const SizedBox(width: 6),
+              Expanded(child: _buildStatBox(context, state.driveFiles.toString(), "Cloud Backup")),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatBox(
+                  context,
+                  state.pendingFiles.toString(),
+                  "Pending Files",
+                  textColor: state.pendingFiles > 0
+                      ? (context.isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100))
+                      : null,
+                ),
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: _buildStatBox(
-                  state.driveFiles.toString(), 
-                  "Cloud Backup", 
-                  textColor: isPending ? const Color(0xFFE65100) : null,
+                  context,
+                  state.lastSync != null ? _formatDate(state.lastSync) : "Never",
+                  "Last Backup",
                 ),
               ),
             ],
           ),
-          if (isPending) ...[
+          if (state.pendingFiles > 0) ...[
             const SizedBox(height: 10),
             _buildWarningBanner(
-              "${state.totalFiles - state.driveFiles} files will be automatically uploaded to Drive when connected.",
+              context,
+              getUploadMessage(state.pendingFiles),
             ),
           ],
           const SizedBox(height: 12),
@@ -310,6 +361,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildActionButton(
+                  context,
                   icon: Icons.cloud_upload_outlined,
                   label: "Backup Now",
                   onPressed: () => context.read<SyncCubit>().syncNow(),
@@ -318,6 +370,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: _buildActionButton(
+                  context,
                   icon: Icons.cloud_download_outlined,
                   label: "Restore Backup",
                   onPressed: () => _showRestoreConfirmation(context),
@@ -327,6 +380,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildActionButton(
+            context,
             icon: Icons.logout,
             label: "Sign out",
             isDanger: true,
@@ -340,7 +394,7 @@ class SettingsScreen extends StatelessWidget {
   void _showRestoreConfirmation(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFAFAFF),
+      backgroundColor: context.scaffoldBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -356,20 +410,20 @@ class SettingsScreen extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0C8E8),
+                    color: context.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  "Data Restore karein?",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D2540)),
+                Text(
+                  "Restore Data?",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryText),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  "Google Drive se aapka purana data download ho kar is device pe save ho jayega. Local data overwrite ho sakta hai.",
+                Text(
+                  "Your backup data will be downloaded from Google Drive and saved on this device. Local data may be overwritten.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Color(0xFF9B8DB8), height: 1.5),
+                  style: TextStyle(fontSize: 13, color: context.subText, height: 1.5),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -381,7 +435,7 @@ class SettingsScreen extends StatelessWidget {
                       await syncCubit.restoreNow(context: context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C5CE7),
+                      backgroundColor: context.primaryColor,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
@@ -394,11 +448,11 @@ class SettingsScreen extends StatelessWidget {
                   child: TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFF0EBF8),
+                      backgroundColor: context.highlightBg,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
-                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
+                    child: Text("Cancel", style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w500)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -410,30 +464,70 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(SyncStatus status) {
-    final isPending = status == SyncStatus.pending;
-    final isError = status == SyncStatus.error;
-    
+  Widget _buildStatusBadge(BuildContext context, SyncStatus status) {
+    String label;
+    IconData icon;
+    Color bgColor;
+    Color fgColor;
+
+    final isDark = context.isDark;
+
+    switch (status) {
+      case SyncStatus.signedOut:
+        label = "Authentication Required";
+        icon = Icons.error_outline;
+        bgColor = isDark ? const Color(0xFF4A2828) : const Color(0xFFFDECEA);
+        fgColor = isDark ? const Color(0xFFEF9A9A) : Colors.red;
+        break;
+      case SyncStatus.offline:
+        label = "Offline";
+        icon = Icons.cloud_off;
+        bgColor = isDark ? const Color(0xFF37474F) : const Color(0xFFECEFF1);
+        fgColor = isDark ? const Color(0xFFB0BEC5) : const Color(0xFF455A64);
+        break;
+      case SyncStatus.syncing:
+        label = "Syncing...";
+        icon = Icons.sync;
+        bgColor = isDark ? const Color(0xFF233B4A) : const Color(0xFFE3F2FD);
+        fgColor = isDark ? const Color(0xFF90CAF9) : const Color(0xFF1565C0);
+        break;
+      case SyncStatus.error:
+        label = "Backup Failed";
+        icon = Icons.error_outline;
+        bgColor = isDark ? const Color(0xFF4A2828) : const Color(0xFFFDECEA);
+        fgColor = isDark ? const Color(0xFFEF9A9A) : Colors.red;
+        break;
+      case SyncStatus.pending:
+        label = "Pending";
+        icon = Icons.access_time;
+        bgColor = isDark ? const Color(0xFF4E3629) : const Color(0xFFFFF3E0);
+        fgColor = isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+        break;
+      case SyncStatus.connected:
+        label = "Connected";
+        icon = Icons.check;
+        bgColor = isDark ? const Color(0xFF1B3D32) : const Color(0xFFE1F5EE);
+        fgColor = isDark ? const Color(0xFF81C784) : const Color(0xFF0F6E56);
+        break;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isPending ? const Color(0xFFFFF3E0) : (isError ? const Color(0xFFFDECEA) : const Color(0xFFE1F5EE)),
+        color: bgColor,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isPending ? Icons.access_time : (isError ? Icons.error_outline : Icons.check), 
-            size: 10, 
-            color: isPending ? const Color(0xFFE65100) : (isError ? Colors.red : const Color(0xFF0F6E56)),
-          ),
+          Icon(icon, size: 10, color: fgColor),
           const SizedBox(width: 4),
           Text(
-            isPending ? "Pending" : (isError ? "Error" : "Synced"),
+            label,
             style: TextStyle(
               fontSize: 10, 
               fontWeight: FontWeight.w500,
-              color: isPending ? const Color(0xFFE65100) : (isError ? Colors.red : const Color(0xFF0F6E56)),
+              color: fgColor,
             ),
           ),
         ],
@@ -441,13 +535,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorBanner(String text) {
+  Widget _buildErrorBanner(BuildContext context, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDECEA),
+        color: context.isDark ? const Color(0xFF4A2828) : const Color(0xFFFDECEA),
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: Colors.red.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Row(
         children: [
@@ -464,11 +558,49 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatBox(String value, String label, {Color? textColor}) {
+  Widget _buildOfflineBanner(BuildContext context, String text) {
+    final isDark = context.isDark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2C2E3B) : const Color(0xFFECEFF1),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.3), width: 0.5),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off, size: 16, color: isDark ? Colors.blueGrey[300] : Colors.blueGrey[700]),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 11, color: isDark ? Colors.blueGrey[200] : Colors.blueGrey[800], height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getFriendlyErrorMessage(String? msg) {
+    if (msg == null) return "Sync failed. Please try again.";
+    final lower = msg.toLowerCase();
+    if (lower.contains("socketexception") || 
+        lower.contains("host lookup") || 
+        lower.contains("connection") || 
+        lower.contains("offline") || 
+        lower.contains("network") ||
+        lower.contains("clientexception")) {
+      return "Network connection issue. Please check your internet connection and try again.";
+    }
+    return msg;
+  }
+
+  Widget _buildStatBox(BuildContext context, String value, String label, {Color? textColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F0FF),
+        color: context.scaffoldBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -476,15 +608,16 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textColor ?? const Color(0xFF2D2540)),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textColor ?? context.primaryText),
           ),
-          Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+          Text(label, style: TextStyle(fontSize: 10, color: context.subText)),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildActionButton(
+    BuildContext context, {
     required IconData icon, 
     required String label, 
     required VoidCallback onPressed,
@@ -496,21 +629,36 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isDanger ? const Color(0xFFFFF0F0) : Colors.white,
+          color: isDanger 
+            ? (context.isDark ? const Color(0xFF5A2A2A) : const Color(0xFFFFF0F0)) 
+            : context.cardBg,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isDanger ? const Color(0xFFF5C0C0) : const Color(0xFFD8D0F0), width: 0.5),
+          border: Border.all(
+            color: isDanger 
+              ? (context.isDark ? Colors.red.withValues(alpha: 0.5) : const Color(0xFFF5C0C0)) 
+              : context.border, 
+            width: 0.5
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 14, color: isDanger ? const Color(0xFFC0392B) : const Color(0xFF6C5CE7)),
+            Icon(
+              icon, 
+              size: 14, 
+              color: isDanger 
+                ? (context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B)) 
+                : context.primaryColor
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11, 
                 fontWeight: FontWeight.w500, 
-                color: isDanger ? const Color(0xFFC0392B) : const Color(0xFF6C5CE7),
+                color: isDanger 
+                  ? (context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B)) 
+                  : context.primaryColor,
               ),
             ),
           ],
@@ -522,24 +670,26 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSyncSettingsCard(BuildContext context, SyncState state) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        border: Border.all(color: context.border, width: 0.5),
       ),
       child: Column(
         children: [
           _buildToggleRow(
+            context,
             icon: Icons.wifi,
             title: "Auto sync",
-            subtitle: "Har note save hone pe drive update ho",
+            subtitle: "Automatically sync notes to Google Drive",
             value: state.autoSync,
             onChanged: (val) => context.read<SyncCubit>().toggleAutoSync(val),
           ),
-          const Divider(height: 1, color: Color(0xFFE0D9F5), thickness: 0.5),
+          Divider(height: 1, color: context.border, thickness: 0.5),
           _buildToggleRow(
+            context,
             icon: Icons.wifi_off_outlined,
             title: "Offline notes sync on connect",
-            subtitle: "Internet aane pe pending notes upload hon",
+            subtitle: "Automatically upload pending notes when you're back online.",
             value: state.offlineSync,
             onChanged: (val) => context.read<SyncCubit>().toggleOfflineSync(val),
           ),
@@ -551,35 +701,34 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildAppSettingsCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        border: Border.all(color: context.border, width: 0.5),
       ),
       child: Column(
         children: [
-          BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, themeState) {
-              final isDarkMode = themeState == ThemeMode.dark;
-              return _buildToggleRow(
-                icon: Icons.brightness_6_outlined,
-                title: "Dark Mode",
-                subtitle: "App ki theme badlein",
-                value: isDarkMode,
-                onChanged: (val) => context.read<ThemeCubit>().toggleTheme(val),
-                iconBg: const Color(0xFFEDE9F8),
-                iconColor: const Color(0xFF6C5CE7),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version;
+              final verText = (version != null && version.isNotEmpty)
+                  ? "Version $version"
+                  : "Version Unknown";
+              return _buildListRow(
+                context,
+                icon: Icons.info_outline,
+                title: "About NotePilot",
+                subtitle: "$verText · Help guide",
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AboutScreen())),
               );
             },
           ),
-          const Divider(height: 1, color: Color(0xFFE0D9F5), thickness: 0.5),
+          Divider(height: 1, color: context.border, thickness: 0.5),
           _buildListRow(
-            icon: Icons.info_outline,
-            title: "About NotePilot",
-            subtitle: "Version ${AboutNotePilotData.versionBadge} · Help guide",
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen())),
-          ),
-          const Divider(height: 1, color: Color(0xFFE0D9F5), thickness: 0.5),
-          _buildListRow(
+            context,
             icon: Icons.privacy_tip_outlined,
             title: "Privacy Policy",
             subtitle: "Data protection policy",
@@ -590,15 +739,19 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildToggleRow({
+  Widget _buildToggleRow(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
     required bool value,
     required Function(bool) onChanged,
-    Color iconBg = const Color(0xFFE1F5EE),
-    Color iconColor = const Color(0xFF0F6E56),
+    Color? iconBg,
+    Color? iconColor,
   }) {
+    final defaultIconBg = iconBg ?? (context.isDark ? const Color(0xFF1B3D32) : const Color(0xFFE1F5EE));
+    final defaultIconColor = iconColor ?? (context.isDark ? const Color(0xFF81C784) : const Color(0xFF0F6E56));
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
@@ -607,10 +760,10 @@ class SettingsScreen extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: iconBg,
+              color: defaultIconBg,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 18, color: iconColor),
+            child: Icon(icon, size: 18, color: defaultIconColor),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -619,11 +772,11 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8)),
+                  style: TextStyle(fontSize: 10, color: context.subText),
                 ),
               ],
             ),
@@ -631,15 +784,16 @@ class SettingsScreen extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeTrackColor: const Color(0xFF6C5CE7),
-            activeColor: Colors.white,
+            activeTrackColor: context.primaryColor,
+            activeThumbColor: Colors.white,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildListRow({
+  Widget _buildListRow(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -655,10 +809,10 @@ class SettingsScreen extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F0FF),
+                color: context.highlightBg,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 18, color: const Color(0xFF6C5CE7)),
+              child: Icon(icon, size: 18, color: context.primaryColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -667,37 +821,37 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8)),
+                    style: TextStyle(fontSize: 10, color: context.subText),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFFC4B8E0)),
+            Icon(Icons.chevron_right, size: 18, color: context.border),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoBanner(String text) {
+  Widget _buildInfoBanner(BuildContext context, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDE9F8),
+        color: context.highlightBg,
         borderRadius: BorderRadius.circular(9),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, size: 16, color: Color(0xFF6C5CE7)),
+          Icon(Icons.info_outline, size: 16, color: context.primaryColor),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF534AB7), height: 1.4),
+              style: TextStyle(fontSize: 11, color: context.isDark ? const Color(0xFFBBADFF) : const Color(0xFF534AB7), height: 1.4),
             ),
           ),
         ],
@@ -705,21 +859,21 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWarningBanner(String text) {
+  Widget _buildWarningBanner(BuildContext context, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: context.isDark ? const Color(0xFF4E3629) : const Color(0xFFFFF3E0),
         borderRadius: BorderRadius.circular(9),
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_upload_outlined, size: 16, color: Color(0xFFE65100)),
+          Icon(Icons.cloud_upload_outlined, size: 16, color: context.isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF854F0B), height: 1.4),
+              style: TextStyle(fontSize: 11, color: context.isDark ? const Color(0xFFFFB74D) : const Color(0xFF854F0B), height: 1.4),
             ),
           ),
         ],
@@ -728,11 +882,11 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showSignOutConfirmation(BuildContext context, SyncState state) {
-    final pendingCount = state.totalFiles - state.driveFiles;
+    final pendingCount = state.pendingFiles;
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFAFAFF),
+      backgroundColor: context.scaffoldBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -748,22 +902,22 @@ class SettingsScreen extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0C8E8),
+                    color: context.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  "Sign out karein?",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D2540)),
+                Text(
+                  "Sign out?",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryText),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   pendingCount > 0 
-                    ? "Aapke $pendingCount local files hain jo Drive mein nahi hain. Sign out karne se ye files sirf is device pe rahen ge."
-                    : "Kya aap waqai sign out karna chahte hain?",
+                    ? "You have $pendingCount local files that are not backed up. Signing out will keep these files only on this device."
+                    : "Are you sure you want to sign out?",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF9B8DB8), height: 1.5),
+                  style: TextStyle(fontSize: 13, color: context.subText, height: 1.5),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -787,11 +941,11 @@ class SettingsScreen extends StatelessWidget {
                   child: TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFF0EBF8),
+                      backgroundColor: context.highlightBg,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
-                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
+                    child: Text("Cancel", style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w500)),
                   ),
                 ),
                 const SizedBox(height: 20),

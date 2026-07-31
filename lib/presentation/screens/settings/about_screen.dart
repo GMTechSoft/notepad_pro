@@ -3,17 +3,74 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:notepad_pro/presentation/screens/privacy_policy_screen.dart';
 import 'package:notepad_pro/presentation/screens/settings/app_guide_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:notepad_pro/data/app_content/about_notepilot_data.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
 
   @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _versionBadge = "Version Unknown";
+  String _versionInfo = "Unknown";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersionInfo();
+  }
+
+  Future<void> _loadVersionInfo() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final version = packageInfo.version;
+      final buildNumber = packageInfo.buildNumber;
+
+      if (!mounted) return;
+
+      if (version.isEmpty && buildNumber.isEmpty) {
+        setState(() {
+          _versionBadge = "Version Unknown";
+          _versionInfo = "Unknown";
+        });
+        return;
+      }
+
+      final badgeStr =
+          version.isNotEmpty ? "Version $version" : "Version Unknown";
+      String infoStr;
+      if (version.isNotEmpty && buildNumber.isNotEmpty) {
+        infoStr = "$version (Build $buildNumber)";
+      } else if (version.isNotEmpty) {
+        infoStr = version;
+      } else {
+        infoStr = "Unknown";
+      }
+
+      setState(() {
+        _versionBadge = badgeStr;
+        _versionInfo = infoStr;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _versionBadge = "Version Unknown";
+        _versionInfo = "Unknown";
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final infoList = AboutNotePilotData.getInformation(_versionInfo);
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F0FF),
+        backgroundColor: context.scaffoldBg,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(children: [
@@ -23,18 +80,18 @@ class AboutScreen extends StatelessWidget {
             child: Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: const Color(0xFFEDE9F8),
+                color: context.highlightBg,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.arrow_back,
-                size: 14, color: Color(0xFF6C5CE7)),
+              child: Icon(Icons.arrow_back,
+                size: 14, color: context.primaryColor),
             ),
           ),
           const SizedBox(width: 8),
-          const Text(AboutNotePilotData.pageTitle,
+          Text(AboutNotePilotData.pageTitle,
             style: TextStyle(fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF2D2540))),
+              color: context.primaryText)),
         ]),
       ),
       body: ListView(
@@ -43,10 +100,10 @@ class AboutScreen extends StatelessWidget {
           // SECTION 1 — HERO CARD
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color(0xFFE0D9F5), width: 0.5),
+                color: context.border, width: 0.5),
             ),
             padding: const EdgeInsets.fromLTRB(14, 20, 14, 16),
             child: Column(
@@ -55,7 +112,7 @@ class AboutScreen extends StatelessWidget {
                 Container(
                   width: 60, height: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6C5CE7),
+                    color: context.primaryColor,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: const Icon(Icons.shield_outlined,
@@ -64,18 +121,18 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // App name
-                const Text(AboutNotePilotData.appName,
+                Text(AboutNotePilotData.appName,
                   style: TextStyle(fontSize: 17,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF2D2540))),
+                    color: context.primaryText)),
                 const SizedBox(height: 4),
 
                 // Tagline
-                const Text(
+                Text(
                   AboutNotePilotData.appTagline,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 11,
-                    color: Color(0xFF9B8DB8), height: 1.6),
+                    color: context.subText, height: 1.6),
                 ),
                 const SizedBox(height: 12),
 
@@ -87,22 +144,22 @@ class AboutScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEDE9F8),
+                        color: context.highlightBg,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text(AboutNotePilotData.versionBadge,
+                      child: Text(_versionBadge,
                         style: TextStyle(fontSize: 10,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF6C5CE7))),
+                          color: context.primaryColor)),
                     ),
-                    _dot(),
-                    const Text(AboutNotePilotData.releaseDateBadge,
+                    _dot(context),
+                    Text(AboutNotePilotData.releaseDateBadge,
                       style: TextStyle(fontSize: 10,
-                        color: Color(0xFF9B8DB8))),
-                    _dot(),
-                    const Text(AboutNotePilotData.platformBadge,
+                        color: context.subText)),
+                    _dot(context),
+                    Text(AboutNotePilotData.platformBadge,
                       style: TextStyle(fontSize: 10,
-                        color: Color(0xFF9B8DB8))),
+                        color: context.subText)),
                   ],
                 ),
               ],
@@ -111,22 +168,22 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 9),
 
           // SECTION 3 — APP KI KHASIYAT (features)
-          _sectionLabel(AboutNotePilotData.featuresSectionLabel),
+          _sectionLabel(context, AboutNotePilotData.featuresSectionLabel),
 
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFFE0D9F5), width: 0.5),
+                color: context.border, width: 0.5),
             ),
             child: Column(
               children: AboutNotePilotData.features.map((feature) {
                 final isLast = feature == AboutNotePilotData.features.last;
                 return Column(
                   children: [
-                    _buildFeatureRowFromData(feature),
-                    if (!isLast) _divider(),
+                    _buildFeatureRowFromData(context, feature),
+                    if (!isLast) _divider(context),
                   ]
                 );
               }).toList(),
@@ -135,34 +192,34 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 9),
 
           // SECTION 4 — APP KI MALOMAT (info rows)
-          _sectionLabel(AboutNotePilotData.infoSectionLabel),
+          _sectionLabel(context, AboutNotePilotData.infoSectionLabel),
 
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFFE0D9F5), width: 0.5),
+                color: context.border, width: 0.5),
             ),
             child: Column(
-              children: AboutNotePilotData.information.map((info) {
-                final isLast = info == AboutNotePilotData.information.last;
-                return _buildInfoRowFromData(info, isLast: isLast);
+              children: infoList.map((info) {
+                final isLast = info == infoList.last;
+                return _buildInfoRowFromData(context, info, isLast: isLast);
               }).toList(),
             ),
           ),
           const SizedBox(height: 9),
 
           // SECTION 5 — REVIEW & RABTA
-          _sectionLabel(AboutNotePilotData.reviewSectionLabel),
+          _sectionLabel(context, AboutNotePilotData.reviewSectionLabel),
 
           // Rate card
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFFE0D9F5), width: 0.5),
+                color: context.border, width: 0.5),
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: 13, vertical: 12),
@@ -170,24 +227,24 @@ class AboutScreen extends StatelessWidget {
               Container(
                 width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
+                  color: context.highlightBg,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.star_outline,
-                  size: 18, color: Color(0xFF6C5CE7)),
+                child: Icon(Icons.star_outline,
+                  size: 18, color: context.primaryColor),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(AboutNotePilotData.rateAppTitle,
                       style: TextStyle(fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF2D2540))),
+                        color: context.primaryText)),
                     Text(AboutNotePilotData.rateAppDesc,
                       style: TextStyle(fontSize: 10,
-                        color: Color(0xFF9B8DB8))),
+                        color: context.subText)),
                   ],
                 ),
               ),
@@ -201,7 +258,7 @@ class AboutScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6C5CE7),
+                    color: context.primaryColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(AboutNotePilotData.rateAppButton,
@@ -217,10 +274,10 @@ class AboutScreen extends StatelessWidget {
           // Links card
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFFE0D9F5), width: 0.5),
+                color: context.border, width: 0.5),
             ),
             child: Column(
               children: AboutNotePilotData.links.map((link) {
@@ -228,7 +285,7 @@ class AboutScreen extends StatelessWidget {
                 return Column(
                   children: [
                     _buildLinkRowFromData(link, context, isLast: isLast),
-                    if (!isLast) _divider(),
+                    if (!isLast) _divider(context),
                   ]
                 );
               }).toList(),
@@ -237,11 +294,11 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Copyright
-          const Center(
+          Center(
             child: Text(
               AboutNotePilotData.copyrightText,
               style: TextStyle(
-                fontSize: 10, color: Color(0xFFC4B8E0)),
+                fontSize: 10, color: context.border),
             ),
           ),
         ],
@@ -249,30 +306,30 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _dot() => Padding(
+  Widget _dot(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 8),
     child: Container(
       width: 3, height: 3,
-      decoration: const BoxDecoration(
-        color: Color(0xFFD8D0F0),
+      decoration: BoxDecoration(
+        color: context.border,
         shape: BoxShape.circle),
     ),
   );
 
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, top: 12),
       child: Text(text.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF9B8DB8),
+          color: context.subText,
           letterSpacing: 0.5,
         )),
     );
   }
 
-  Widget _buildFeatureRowFromData(AboutFeatureData data) {
+  Widget _buildFeatureRowFromData(BuildContext context, AboutFeatureData data) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 13, vertical: 11),
@@ -293,13 +350,13 @@ class AboutScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(data.title,
-                  style: const TextStyle(fontSize: 12,
+                  style: TextStyle(fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF2D2540))),
+                    color: context.primaryText)),
                 const SizedBox(height: 2),
                 Text(data.desc,
-                  style: const TextStyle(fontSize: 10,
-                    color: Color(0xFF9B8DB8), height: 1.5)),
+                  style: TextStyle(fontSize: 10,
+                    color: context.subText, height: 1.5)),
               ],
             ),
           ),
@@ -308,14 +365,14 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider() => const Divider(
+  Widget _divider(BuildContext context) => Divider(
     height: 1,
     indent: 13, endIndent: 13,
-    color: Color(0xFFF5F0FF),
+    color: context.border,
     thickness: 0.5,
   );
 
-  Widget _buildInfoRowFromData(AboutInfoData data, {bool isLast = false}) {
+  Widget _buildInfoRowFromData(BuildContext context, AboutInfoData data, {bool isLast = false}) {
     return Column(children: [
       Padding(
         padding: const EdgeInsets.symmetric(
@@ -331,18 +388,18 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(width: 9),
           Text(data.label,
-            style: const TextStyle(fontSize: 12,
+            style: TextStyle(fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF2D2540))),
+              color: context.primaryText)),
           const Spacer(),
           Text(data.value,
-            style: const TextStyle(fontSize: 11,
-              color: Color(0xFF9B8DB8))),
+            style: TextStyle(fontSize: 11,
+              color: context.subText)),
         ]),
       ),
       if (!isLast)
-        const Divider(height: 1, indent: 13, endIndent: 13,
-          color: Color(0xFFF5F0FF), thickness: 0.5),
+        Divider(height: 1, indent: 13, endIndent: 13,
+          color: context.border, thickness: 0.5),
     ]);
   }
 
@@ -376,12 +433,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(data.label,
-              style: const TextStyle(fontSize: 12,
+              style: TextStyle(fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF2D2540))),
+                color: context.primaryText)),
           ),
-          const Icon(Icons.chevron_right,
-            size: 16, color: Color(0xFFC4B8E0)),
+          Icon(Icons.chevron_right,
+            size: 16, color: context.border),
         ]),
       ),
     );

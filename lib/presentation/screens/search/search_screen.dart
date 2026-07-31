@@ -9,6 +9,7 @@ import 'package:notepad_pro/core/utils/search_mode.dart';
 
 import '../../../domain/entities/vault_file.dart';
 import '../../../services/hive_service.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class SearchScreen extends StatefulWidget {
   final String initialQuery;
@@ -63,7 +64,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: context.scaffoldBg,
       body: Column(
         children: [
           _buildSearchBar(),
@@ -89,10 +90,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
+                  color: context.highlightBg,
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: const Icon(Icons.arrow_back, size: 16, color: Color(0xFF6C5CE7)),
+                child: Icon(Icons.arrow_back, size: 16, color: context.primaryColor),
               ),
             ),
             const SizedBox(width: 8),
@@ -100,22 +101,22 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Container(
                 height: 36,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+                  border: Border.all(color: context.border, width: 0.5),
                 ),
                 child: TextField(
                   controller: _searchController,
                   textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                   textAlign: isRTL ? TextAlign.right : TextAlign.left,
                   autofocus: true,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540), fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 13, color: context.primaryText, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: isRTL ? 'تلاش کریں...' : 'Search notes...',
-                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFB0A0CC)),
+                    hintStyle: TextStyle(fontSize: 13, color: context.subText),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                    suffixIcon: const Icon(Icons.search, size: 16, color: Color(0xFFC4B8E0)),
+                    suffixIcon: Icon(Icons.search, size: 16, color: context.border),
                   ),
                   onChanged: (val) {
                     setState(() {
@@ -146,8 +147,8 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Container(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(9)),
-                child: const Icon(Icons.close, size: 16, color: Color(0xFF6C5CE7)),
+                decoration: BoxDecoration(color: context.highlightBg, borderRadius: BorderRadius.circular(9)),
+                child: Icon(Icons.close, size: 16, color: context.primaryColor),
               ),
             ),
           ],
@@ -190,11 +191,11 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: isActive ? const Color(0xFFEDE9F8) : Colors.white,
+                color: isActive ? context.highlightBg : context.cardBg,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isActive ? const Color(0xFF6C5CE7) : const Color(0xFFD8D0F0), width: 0.5),
+                border: Border.all(color: isActive ? context.primaryColor : context.border, width: 0.5),
               ),
-              child: Text(f['label']!, style: TextStyle(fontSize: 11, fontWeight: isActive ? FontWeight.w500 : FontWeight.w400, color: isActive ? const Color(0xFF6C5CE7) : const Color(0xFF9B8DB8))),
+              child: Text(f['label']!, style: TextStyle(fontSize: 11, fontWeight: isActive ? FontWeight.w500 : FontWeight.w400, color: isActive ? context.primaryColor : context.subText)),
             ),
           );
         },
@@ -209,34 +210,34 @@ class _SearchScreenState extends State<SearchScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5)),
+      decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: context.border, width: 0.5)),
       child: Row(
         children: [
-          const Icon(Icons.description_outlined, size: 14, color: Color(0xFF6C5CE7)),
+          Icon(Icons.description_outlined, size: 14, color: context.primaryColor),
           const SizedBox(width: 5),
-          Text('$totalFiles file mein mila', style: const TextStyle(fontSize: 11, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500)),
+          Text('Found in $totalFiles file${totalFiles == 1 ? "" : "s"}', style: TextStyle(fontSize: 11, color: context.primaryColor, fontWeight: FontWeight.w500)),
           const Spacer(),
-          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(5)), child: Text('$totalMatches matches', style: const TextStyle(fontSize: 11, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500))),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: context.highlightBg, borderRadius: BorderRadius.circular(5)), child: Text('$totalMatches matches', style: TextStyle(fontSize: 11, color: context.primaryColor, fontWeight: FontWeight.w500))),
         ],
       ),
     );
   }
 
   Widget _buildResultsList() {
-    if (_query.isEmpty) return _buildEmptyState(icon: Icons.search, title: 'Kuch likhein', subtitle: 'Notes aur folders mein search karein');
-    if (_isSearching) return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Color(0xFF6C5CE7))));
-    if (_results.isEmpty) return _buildEmptyState(icon: Icons.search_off_outlined, title: 'Koi result nahi mila', subtitle: '\"$_query\" ke liye kuch nahi mila');
+    if (_query.isEmpty) return _buildEmptyState(icon: Icons.search, title: 'Type something to search', subtitle: 'Search in notes and folders');
+    if (_isSearching) return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(context.primaryColor)));
+    if (_results.isEmpty) return _buildEmptyState(icon: Icons.search_off_outlined, title: 'No results found', subtitle: 'No matches found for "$_query"');
     return ListView.separated(padding: const EdgeInsets.fromLTRB(12, 0, 12, 20), itemCount: _results.length, separatorBuilder: (_, __) => const SizedBox(height: 7), itemBuilder: (context, i) => _buildResultCard(_results[i]));
   }
 
   Widget _buildEmptyState({required IconData icon, required String title, required String subtitle}) {
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Container(width: 52, height: 52, decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(14)), child: Icon(icon, size: 26, color: const Color(0xFF6C5CE7))),
+        Container(width: 52, height: 52, decoration: BoxDecoration(color: context.highlightBg, borderRadius: BorderRadius.circular(14)), child: Icon(icon, size: 26, color: context.primaryColor)),
         const SizedBox(height: 12),
-        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
+        Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: context.primaryText)),
         const SizedBox(height: 4),
-        Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Color(0xFF9B8DB8))),
+        Text(subtitle, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: context.subText)),
       ]),
     );
   }
@@ -249,14 +250,14 @@ class _SearchScreenState extends State<SearchScreen> {
     final folderName = _getFolderName(file.folderId) ?? 'Root';
     final dateLabel = _getRelativeDate(file.updatedAt);
     final engine = SearchEngine(tokens: SearchEngine.tokenize(_query));
-
+ 
     String combinedContent = "${file.title} ${file.description}".toLowerCase();
     Map<String, int> dynamicWordCounts = {};
     for (String token in _searchTokens) {
       final escapedToken = RegExp.escape(token.toLowerCase());
       dynamicWordCounts[token] = RegExp(escapedToken).allMatches(combinedContent).length;
     }
-
+ 
     return GestureDetector(
       onTap: () => context.push('/read-note', extra: {
         'file': file,
@@ -267,15 +268,15 @@ class _SearchScreenState extends State<SearchScreen> {
         'highlightColors': _wordColorMap,
       }),
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5)),
+        decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.border, width: 0.5)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(padding: const EdgeInsets.fromLTRB(11, 9, 11, 6), child: Column(crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
-            _buildMultiHighlight(text: file.title, baseStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540)), textDirection: textDir, textAlign: textAlign),
+            _buildMultiHighlight(text: file.title, baseStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText), textDirection: textDir, textAlign: textAlign),
             const SizedBox(height: 2),
-            Text('$folderName · $dateLabel', textDirection: textDir, textAlign: textAlign, style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+            Text('$folderName · $dateLabel', textDirection: textDir, textAlign: textAlign, style: TextStyle(fontSize: 10, color: context.subText)),
           ])),
-          const Divider(height: 1, color: Color(0xFFF5F0FF), thickness: 0.5),
-          Padding(padding: const EdgeInsets.fromLTRB(11, 6, 11, 6), child: Column(crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: result.previewLines.take(3).map((line) => Padding(padding: const EdgeInsets.only(bottom: 2), child: _buildMultiHighlight(text: line, baseStyle: const TextStyle(fontSize: 11, color: Color(0xFF6D6380), height: 1.6), textDirection: textDir, textAlign: textAlign))).toList())),
+          Divider(height: 1, color: context.border, thickness: 0.5),
+          Padding(padding: const EdgeInsets.fromLTRB(11, 6, 11, 6), child: Column(crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: result.previewLines.take(3).map((line) => Padding(padding: const EdgeInsets.only(bottom: 2), child: _buildMultiHighlight(text: line, baseStyle: TextStyle(fontSize: 11, color: context.subText, height: 1.6), textDirection: textDir, textAlign: textAlign))).toList())),
           Padding(padding: const EdgeInsets.fromLTRB(11, 0, 11, 8), child: Row(children: [
             Expanded(
               child: Wrap(
@@ -285,14 +286,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   final color = _wordColorMap[e.key] ?? Colors.grey;
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), 
-                    decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withOpacity(0.3), width: 0.5)), 
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5)), 
                     child: Text('${e.key} ×${e.value}', style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w600))
                   );
                 }).toList()
               ),
             ),
             const SizedBox(width: 8),
-            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFEDE9F8), borderRadius: BorderRadius.circular(5)), child: const Text('Open ->', style: TextStyle(fontSize: 10, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w500))),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: context.highlightBg, borderRadius: BorderRadius.circular(5)), child: Text('Open ->', style: TextStyle(fontSize: 10, color: context.primaryColor, fontWeight: FontWeight.w500))),
           ])),
         ]),
       ),
@@ -325,12 +326,14 @@ class _SearchScreenState extends State<SearchScreen> {
       }
       
       final color = _wordColorMap[matchedToken] ?? Colors.yellow;
-      final textStyleColor = (_multiHighlighterPalette.contains(color) && color != const Color(0xFFBA68C8)) ? const Color(0xFF2D2540) : color;
-
+      final textStyleColor = (_multiHighlighterPalette.contains(color) && color != const Color(0xFFBA68C8)) 
+          ? (context.isDark ? const Color(0xFF1A1625) : const Color(0xFF2D2540)) 
+          : color;
+ 
       spans.add(TextSpan(
         text: remaining.substring(earliest, earliest + matchedToken.length), 
         style: baseStyle.copyWith(
-          backgroundColor: color.withOpacity(0.3), 
+          backgroundColor: color.withValues(alpha: 0.3), 
           color: textStyleColor,
           fontWeight: FontWeight.bold
         )

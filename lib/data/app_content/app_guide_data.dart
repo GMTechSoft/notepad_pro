@@ -13,7 +13,7 @@ class AppGuideData {
       "Smart Search",
       "Auto Save",
       "PDF Export",
-      "Dark Mode",
+      "System Theme",
     ],
   );
 
@@ -84,7 +84,7 @@ class AppGuideData {
     FeatureGuideItem(
       icon: Icons.color_lens_outlined,
       title: "Customize Experience",
-      explanation: "• Dark Mode\n• Light Mode\n• English (LTR)\n• Urdu (RTL)",
+      explanation: "• System Theme\n• English (LTR)\n• Urdu (RTL)",
     ),
   ];
 
@@ -103,7 +103,7 @@ class AppGuideData {
     FeatureShowcaseItem(icon: Icons.description, title: "Export Word"),
     FeatureShowcaseItem(icon: Icons.text_snippet, title: "Export Text"),
     FeatureShowcaseItem(icon: Icons.print, title: "Printing"),
-    FeatureShowcaseItem(icon: Icons.dark_mode, title: "Dark Mode"),
+    FeatureShowcaseItem(icon: Icons.dark_mode, title: "System Theme"),
     FeatureShowcaseItem(icon: Icons.color_lens, title: "Folder Colors"),
     FeatureShowcaseItem(icon: Icons.drive_file_move, title: "Move Files"),
     FeatureShowcaseItem(icon: Icons.snippet_folder, title: "Move Folders"),
@@ -180,8 +180,8 @@ class AppGuideData {
       content: "Edit the folder and select a new color from the color palette.",
     ),
     ExpandableItem(
-      title: "How do I enable Dark Mode?",
-      content: "Go to Settings > Theme and select 'Dark Mode'.",
+      title: "How do I change the app theme?",
+      content: "NotePilot automatically follows your device's system appearance. To switch between Light and Dark modes, simply change your device's system theme. Manual theme selection is no longer available within the app.",
     ),
     ExpandableItem(
       title: "How does Auto Save work?",
@@ -205,7 +205,7 @@ class AppGuideData {
       "Export PDF",
       "Export Word",
       "Printing",
-      "Dark Mode",
+      "System Theme",
     ],
   );
 

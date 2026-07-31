@@ -7,8 +7,6 @@ import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/notes/notes_cubit.dart'; // Import NotesCubit
 import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart'; // Import SyncCubit
 
-import 'package:notepad_pro/presentation/blocs/theme/theme_cubit.dart';
-
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -19,42 +17,56 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: sl<ThemeCubit>()),
         BlocProvider<FoldersCubit>(create: (context) => sl<FoldersCubit>()..loadFolders()),
         BlocProvider<FilesCubit>(create: (context) => sl<FilesCubit>()..loadFiles()),
         BlocProvider<NotesCubit>(create: (context) => sl<NotesCubit>()..loadNotes()), // Add NotesCubit
         BlocProvider<SyncCubit>(create: (context) => sl<SyncCubit>()), // Add SyncCubit
       ],
-      child: Builder(
-        builder: (context) {
-          return BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, themeMode) {
-              return MaterialApp.router(
-                title: 'NotePilot',
-                debugShowCheckedModeBanner: false,
-                themeMode: themeMode,
-                theme: ThemeData(
-                  brightness: Brightness.light,
-                  scaffoldBackgroundColor: const Color(0xFFF5F0FF),
-                  colorScheme: ColorScheme.fromSeed(
-                    seedColor: const Color(0xFF6C5CE7),
-                    brightness: Brightness.light,
-                  ),
-                ),
-                darkTheme: ThemeData(
-                  brightness: Brightness.dark,
-                  scaffoldBackgroundColor: const Color(0xFF1A1625),
-                  colorScheme: ColorScheme.fromSeed(
-                    seedColor: const Color(0xFF6C5CE7),
-                    brightness: Brightness.dark,
-                  ),
-                ),
-                routerConfig: AppRouter.router,
-              );
-            },
-          );
-        },
+      child: MaterialApp.router(
+        title: 'NotePilot',
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.system,
+        theme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.light,
+          scaffoldBackgroundColor: const Color(0xFFF5F0FF),
+          cardColor: Colors.white,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF6C5CE7),
+            brightness: Brightness.light,
+          ).copyWith(
+            primary: const Color(0xFF6C5CE7),
+            surface: Colors.white,
+            onSurface: const Color(0xFF2D2540),
+            onSurfaceVariant: const Color(0xFF9B8DB8),
+            primaryContainer: const Color(0xFFEDE9F8),
+            onPrimaryContainer: const Color(0xFF6C5CE7),
+            outline: const Color(0xFFE0D9F5),
+            outlineVariant: const Color(0xFFF5F0FF),
+          ),
+        ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF1A1625),
+          cardColor: const Color(0xFF252033),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF6C5CE7),
+            brightness: Brightness.dark,
+          ).copyWith(
+            primary: const Color(0xFF6C5CE7),
+            surface: const Color(0xFF252033),
+            onSurface: const Color(0xFFEDE9F8),
+            onSurfaceVariant: const Color(0xFF9B8DB8),
+            primaryContainer: const Color(0xFF3B3354),
+            onPrimaryContainer: const Color(0xFFEDE9F8),
+            outline: const Color(0xFF3B3354),
+            outlineVariant: const Color(0xFF1A1625),
+          ),
+        ),
+        routerConfig: AppRouter.router,
       ),
     );
   }
 }
+

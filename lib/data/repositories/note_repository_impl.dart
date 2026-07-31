@@ -22,7 +22,7 @@ class NoteRepositoryImpl implements INoteRepository {
 
   @override
   Future<void> updateNote(NoteModel note) async {
-    await _hiveService.updateNote(note);
+    await _hiveService.updateNote(note.copyWith(isSynced: false));
   }
 
   @override
@@ -39,10 +39,9 @@ class NoteRepositoryImpl implements INoteRepository {
       content: content,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      isSynced: true, // Default to true as there's no cloud to sync with
+      isSynced: false,
     );
     await _hiveService.addNote(newNote);
     return newNote;
   }
 }
-

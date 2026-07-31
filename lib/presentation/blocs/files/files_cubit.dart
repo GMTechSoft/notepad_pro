@@ -44,21 +44,20 @@ class FilesCubit extends Cubit<FilesState> {
   // Store information about the most recent move for undo
   String? _lastMovedItemId;
   String? _lastOldParentId;
-  String? _lastNewParentId;
 
   FilesCubit(this._vaultRepository, this._syncCubit) : super(FilesInitial());
 
   Future<void> loadFiles() async {
     emit(FilesLoadInProgress());
-    debugPrint('FilesCubit state after emit: ${this.state.runtimeType}');
+    debugPrint('FilesCubit state after emit: ${state.runtimeType}');
     try {
       final allFiles = await _vaultRepository.getAllFiles();
       debugPrint('Stage 3: FilesCubit loaded ${allFiles.length} files');
       emit(FilesLoadSuccess(allFiles));
-    debugPrint('FilesCubit state after emit: ${this.state.runtimeType} (files count=${allFiles.length})');
+    debugPrint('FilesCubit state after emit: ${state.runtimeType} (files count=${allFiles.length})');
     } catch (e) {
       emit(FilesLoadFailure(e.toString()));
-    debugPrint('FilesCubit state after emit: ${this.state.runtimeType} (error=${e.toString()})');
+    debugPrint('FilesCubit state after emit: ${state.runtimeType} (error=${e.toString()})');
     }
   }
 
@@ -138,7 +137,6 @@ class FilesCubit extends Cubit<FilesState> {
       // Store move info
       _lastMovedItemId = itemId;
       _lastOldParentId = oldParentId;
-      _lastNewParentId = targetFolderId;
 
       await _vaultRepository.moveItem(itemId: itemId, newParentFolderId: targetFolderId);
       await loadFiles();
@@ -160,7 +158,6 @@ class FilesCubit extends Cubit<FilesState> {
       // Clear undo info after successful undo
       _lastMovedItemId = null;
       _lastOldParentId = null;
-      _lastNewParentId = null;
       await loadFiles();
       Future(() => _syncCubit.performAutoSync());
     } catch (e) {
@@ -183,12 +180,12 @@ class FilesCubit extends Cubit<FilesState> {
   // Load files for a specific folder (root uses null)
   Future<void> loadFilesForFolder(String? folderId) async {
     emit(FilesLoadInProgress());
-    debugPrint('FilesCubit state after emit (folder load): ${this.state.runtimeType}');
+    debugPrint('FilesCubit state after emit (folder load): ${state.runtimeType}');
     try {
       final folderFiles = await _vaultRepository.getFiles(folderId);
       debugPrint('FilesCubit loaded folderId=${folderId ?? "ROOT"} files count=${folderFiles.length}');
       emit(FilesLoadSuccess(folderFiles));
-    debugPrint('FilesCubit state after emit (folder load): ${this.state.runtimeType} (files count=${folderFiles.length})');
+    debugPrint('FilesCubit state after emit (folder load): ${state.runtimeType} (files count=${folderFiles.length})');
     } catch (e) {
       emit(FilesLoadFailure(e.toString()));
     }

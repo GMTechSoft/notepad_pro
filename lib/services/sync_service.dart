@@ -38,11 +38,45 @@ class GoogleDriveSyncService {
 
   /// Authenticate and initialize the Google Drive API client
   Future<ga.DriveApi?> _getDriveApi() async {
-    final GoogleSignInAccount? account = await _authService.signInSilently() ??
-        await _authService.signInWithGoogle();
-    if (account == null) return null;
+    debugPrint('[SyncService] _getDriveApi: checking currentUser');
+    GoogleSignInAccount? account = _authService.currentUser;
+    if (account != null) {
+      debugPrint('[SyncService] _getDriveApi: currentUser is already not null (${account.email}), validating token and scopes');
+      final bool isValid = await _authService.validateCurrentUser(account);
+      if (isValid) {
+        debugPrint('[SyncService] _getDriveApi: currentUser is valid, continuing');
+      } else {
+        debugPrint('[SyncService] _getDriveApi: currentUser is invalid or lacks scopes, resetting account to null');
+        account = null;
+      }
+    }
 
+    if (account == null) {
+      debugPrint('[SyncService] _getDriveApi: trying silent sign-in');
+      account = await _authService.signInSilently();
+      if (account != null) {
+        debugPrint('[SyncService] _getDriveApi: silent sign-in succeeded (${account.email})');
+      }
+    }
+
+    if (account == null) {
+      debugPrint('[SyncService] _getDriveApi: silent sign-in returned null, trying full sign-in');
+      account = await _authService.signInWithGoogle();
+      if (account != null) {
+        debugPrint('[SyncService] _getDriveApi: full sign-in succeeded (${account.email})');
+      } else {
+        debugPrint('[SyncService] _getDriveApi: full sign-in returned null');
+      }
+    }
+
+    if (account == null) {
+      debugPrint('[SyncService] _getDriveApi: all authentication attempts failed, returning null');
+      return null;
+    }
+
+    debugPrint('[SyncService] _getDriveApi: fetching auth headers');
     final authHeaders = await account.authHeaders;
+    debugPrint('[SyncService] _getDriveApi: auth headers fetched successfully');
     final authenticateClient = GoogleAuthClient(authHeaders);
     return ga.DriveApi(authenticateClient);
   }
@@ -392,6 +426,8 @@ class GoogleDriveSyncService {
     }
     return bytes;
   }
+
+  Future<int> getCloudItemCount() async => 0;
 
   String _escapeQuery(String value) {
     return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");

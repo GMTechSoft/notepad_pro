@@ -1,3 +1,4 @@
+// ignore_for_file: overridden_fields
 import 'package:hive/hive.dart';
 import 'package:notepad_pro/domain/entities/note_entity.dart';
 
@@ -5,20 +6,28 @@ part 'note_model.g.dart'; // Generated adapter file
 
 @HiveType(typeId: 100) // Assign a unique typeId
 class NoteModel extends NoteEntity {
+  @override
   @HiveField(0)
   final String id;
+  @override
   @HiveField(1)
   final String title;
+  @override
   @HiveField(2)
   final String content;
+  @override
   @HiveField(3)
   final DateTime createdAt;
+  @override
   @HiveField(4)
   final DateTime updatedAt;
+  @override
   @HiveField(5)
   final String? driveFileId;
+  @override
   @HiveField(6)
   final bool isSynced;
+  @override
   @HiveField(7)
   final String? folderId;
 

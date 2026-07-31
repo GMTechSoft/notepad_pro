@@ -10,10 +10,10 @@ import 'package:notepad_pro/presentation/widgets/cards/file_card.dart';
 import 'package:notepad_pro/presentation/screens/home/widgets/create_bottom_sheet.dart';
 import 'package:notepad_pro/presentation/widgets/cards/folder_card.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
-import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 import '../../blocs/files/files_cubit.dart';
 
@@ -81,140 +81,25 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                 );
               }
 
-              return BlocBuilder<SelectionCubit, SelectionState>(
-                builder: (context, selectionState) {
-                  final isSelecting = selectionState.isSelecting;
+              return BlocBuilder<FilesCubit, FilesState>(
+                builder: (context, filesState) {
+                  final currentFolderModel = effectiveFolderId != null ? folderBox.get(effectiveFolderId) : null;
 
-                  return WillPopScope(
-                    onWillPop: () async {
-                      if (!isSelecting) return true;
-                      context.read<SelectionCubit>().clearSelection();
-                      return false;
-                    },
-                    child: Scaffold(
-                backgroundColor: const Color(0xFFF5F0FF),
-                appBar: isSelecting 
-                  ? AppBar(
-                      backgroundColor: const Color(0xFF6C5CE7),
-                      elevation: 0,
-                      leading: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => context.read<SelectionCubit>().clearSelection(),
-                      ),
-                      title: Text(
-                        '${selectionState.selectedIds.length} item${selectionState.selectedIds.length > 1 ? "s" : ""} selected',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            context.read<SelectionCubit>().selectAll(
-                              context.read<FoldersCubit>().state is FoldersLoadSuccess ? (context.read<FoldersCubit>().state as FoldersLoadSuccess).folders.cast<dynamic>() : [],
-                              context.read<FilesCubit>().state is FilesLoadSuccess ? (context.read<FilesCubit>().state as FilesLoadSuccess).files.cast<dynamic>() : []
-                            );
-                          },
-                          child: const Text("Sab",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13))),
-                      ],
-                    )
-                  : AppBar(
-                      backgroundColor: const Color(0xFFF5F0FF),
-                      elevation: 0,
-                      automaticallyImplyLeading: false,
-                      title: Row(children: [
-                        InkWell(
-                          onTap: () => context.pop(),
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFEDE9F8),
-                                borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.arrow_back, size: 14, color: Color(0xFF6C5CE7)),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(currentFolderModel?.name ?? 'Root Folder',
-                            style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2D2540))),
-                      ]),
-                      actions: [
-                        InkWell(
-                          onTap: () => context.push('/search', extra: {'initialQuery': '', 'folderId': folderId}),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 14),
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFEDE9F8),
-                                borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.search, size: 14, color: Color(0xFF6C5CE7)),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => context.push('/settings'),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 14),
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFEDE9F8),
-                                borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.settings_outlined, size: 14, color: Color(0xFF6C5CE7)),
-                          ),
-                        ),
-                      ],
-                    ),
-                body: BlocBuilder<FilesCubit, FilesState>(
-                  builder: (context, state) {
-                    if (state is FilesInitial || state is FilesLoadInProgress) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                  if (currentFolderModel == null && effectiveFolderId != null) {
+                    return Scaffold(
+                      appBar: AppBar(title: const Text('Error')),
+                      body: const Center(child: Text('Folder not found.')),
+                    );
+                  }
 
-                    final subfolders = folderBox.values
-                        .where((f) => f.parentId == effectiveFolderId)
-                        .map((f) => f.toEntity())
-                        .toList();
+                  final subfolders = folderBox.values
+                      .where((f) => f.parentId == effectiveFolderId)
+                      .map((f) => f.toEntity())
+                      .toList();
 
-                    if (state is FilesLoadFailure) {
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                Text("0 items", style: TextStyle(fontSize: 11, color: Color(0xFF9B8DB8))),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Center(
-                              child: Text(
-                                state.message,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF9B8DB8)),
-                              ),
-                            ),
-                          ),
-                          if (!isSelecting) _buildBottomCreateButton(context)
-                          else _buildSelectionBottomBar(context, selectionState, []),
-                        ],
-                      );
-                    }
-
-                    if (state is! FilesLoadSuccess) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final List<dynamic> files = [];
-                    for (var f in state.files) {
+                  final List<dynamic> files = [];
+                  if (filesState is FilesLoadSuccess) {
+                    for (var f in filesState.files) {
                       try {
                         final String? fFolderId = (f as dynamic).folderId?.toString();
                         final String? targetFolderId = effectiveFolderId?.toString();
@@ -223,84 +108,222 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                         }
                       } catch (_) {}
                     }
+                  }
 
-                    final allItems = [...subfolders, ...files];
+                  final allItems = [...subfolders, ...files];
 
-                    if (allItems.isEmpty && !isSelecting) {
-                      return _buildEmptyState(context, isSelecting: isSelecting, state: selectionState, allItems: allItems);
-                    }
+                  return BlocBuilder<SelectionCubit, SelectionState>(
+                    builder: (context, selectionState) {
+                      final isSelecting = selectionState.isSelecting;
 
-                    try {
-                      allItems.sort((a, b) {
-                        final isAFolder = a is Folder;
-                        final isBFolder = b is Folder;
-                        if (isAFolder && !isBFolder) return -1;
-                        if (!isAFolder && isBFolder) return 1;
+                      // Clean up selection state if selected items are no longer visible/valid (e.g. deleted/moved/restored)
+                      final visibleIds = allItems.map((e) => (e as dynamic).id as String).toSet();
+                      final hasInvisibleSelected = selectionState.selectedIds.any((id) => !visibleIds.contains(id));
+                      if (hasInvisibleSelected) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (context.mounted) {
+                            context.read<SelectionCubit>().keepOnly(visibleIds.toList());
+                          }
+                        });
+                      }
 
-                        String nameA = '';
-                        String nameB = '';
+                      // Build the body widget based on FilesCubit state
+                      final Widget bodyWidget;
+                      if (filesState is FilesInitial || filesState is FilesLoadInProgress) {
+                        bodyWidget = const Center(child: CircularProgressIndicator());
+                      } else if (filesState is FilesLoadFailure) {
+                        bodyWidget = Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("0 items", style: TextStyle(fontSize: 11, color: context.subText)),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: Text(
+                                  filesState.message,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12, color: context.subText),
+                                ),
+                              ),
+                            ),
+                            if (!isSelecting) _buildBottomCreateButton(context)
+                            else _buildSelectionBottomBar(context, selectionState, []),
+                          ],
+                        );
+                      } else {
+                        // FilesLoadSuccess
+                        if (allItems.isEmpty && !isSelecting) {
+                          bodyWidget = _buildEmptyState(context, isSelecting: isSelecting, state: selectionState, allItems: allItems);
+                        } else {
+                          try {
+                            allItems.sort((a, b) {
+                              final isAFolder = a is Folder;
+                              final isBFolder = b is Folder;
+                              if (isAFolder && !isBFolder) return -1;
+                              if (!isAFolder && isBFolder) return 1;
 
-                        try {
-                          nameA = isAFolder ? a.name : ((a as dynamic).title?.toString() ?? (a as dynamic).name?.toString() ?? '');
-                        } catch (_) {}
+                              String nameA = '';
+                              String nameB = '';
 
-                        try {
-                          nameB = isBFolder ? b.name : ((b as dynamic).title?.toString() ?? (b as dynamic).name?.toString() ?? '');
-                        } catch (_) {}
+                              try {
+                                nameA = isAFolder ? a.name : ((a as dynamic).title?.toString() ?? (a as dynamic).name?.toString() ?? '');
+                              } catch (_) {}
 
-                        return nameA.toLowerCase().compareTo(nameB.toLowerCase());
-                      });
-                    } catch (_) {}
+                              try {
+                                nameB = isBFolder ? b.name : ((b as dynamic).title?.toString() ?? (b as dynamic).name?.toString() ?? '');
+                              } catch (_) {}
 
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              return nameA.toLowerCase().compareTo(nameB.toLowerCase());
+                            });
+                          } catch (_) {}
+
+                          bodyWidget = Column(
                             children: [
-                              Text("${allItems.length} items",
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF9B8DB8))),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("${allItems.length} items",
+                                        style: TextStyle(fontSize: 11, color: context.subText)),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView.builder(
+                                  padding: const EdgeInsets.only(bottom: 80),
+                                  itemCount: allItems.length,
+                                  itemBuilder: (context, index) {
+                                    final item = allItems[index];
+                                    if (item is Folder) {
+                                      return FolderCard(folder: item);
+                                    } else {
+                                      try {
+                                        if (item is VaultFile) {
+                                          return FileCard(file: item);
+                                        }
+                                        final dynamic dItem = item;
+                                        final fallbackFile = VaultFile(
+                                          id: dItem.id?.toString() ?? '',
+                                          folderId: dItem.folderId?.toString(),
+                                          title: dItem.title?.toString() ?? dItem.name?.toString() ?? 'Untitled Note',
+                                          description: dItem.description?.toString() ?? '',
+                                          createdAt: dItem.createdAt ?? DateTime.now(),
+                                          updatedAt: dItem.updatedAt ?? DateTime.now(),
+                                        );
+                                        return FileCard(file: fallbackFile);
+                                      } catch (e) {
+                                        return const SizedBox.shrink();
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                              if (!isSelecting) _buildBottomCreateButton(context)
+                              else _buildSelectionBottomBar(context, selectionState, allItems),
                             ],
-                          ),
+                          );
+                        }
+                      }
+
+                      return PopScope(
+                        canPop: !isSelecting,
+                        onPopInvokedWithResult: (didPop, dynamic result) {
+                          if (didPop) return;
+                          if (isSelecting) {
+                            context.read<SelectionCubit>().clearSelection();
+                          }
+                        },
+                        child: Scaffold(
+                          backgroundColor: context.scaffoldBg,
+                          appBar: isSelecting 
+                            ? AppBar(
+                                backgroundColor: context.primaryColor,
+                                elevation: 0,
+                                leading: IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.white),
+                                  onPressed: () => context.read<SelectionCubit>().clearSelection(),
+                                ),
+                                title: Text(
+                                  '${selectionState.selectedIds.length} item${selectionState.selectedIds.length > 1 ? "s" : ""} selected',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500)),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      final visibleFolders = allItems.whereType<Folder>().toList();
+                                      final visibleFiles = allItems.where((item) => item is! Folder).toList();
+                                      context.read<SelectionCubit>().selectAll(visibleFolders, visibleFiles);
+                                    },
+                                    child: const Text("All",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13))),
+                                ],
+                              )
+                            : AppBar(
+                                backgroundColor: context.scaffoldBg,
+                                elevation: 0,
+                                automaticallyImplyLeading: false,
+                                title: Row(children: [
+                                  InkWell(
+                                    onTap: () => context.pop(),
+                                    child: Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                          color: context.highlightBg,
+                                          borderRadius: BorderRadius.circular(8)),
+                                      child: Icon(Icons.arrow_back, size: 14, color: context.primaryColor),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(currentFolderModel?.name ?? 'Root Folder',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color: context.primaryText)),
+                                ]),
+                                actions: [
+                                  InkWell(
+                                    onTap: () => context.push('/search', extra: {'initialQuery': '', 'folderId': folderId}),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(right: 14),
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                          color: context.highlightBg,
+                                          borderRadius: BorderRadius.circular(8)),
+                                      child: Icon(Icons.search, size: 14, color: context.primaryColor),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () => context.push('/settings'),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(right: 14),
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                          color: context.highlightBg,
+                                          borderRadius: BorderRadius.circular(8)),
+                                      child: Icon(Icons.settings_outlined, size: 14, color: context.primaryColor),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          body: bodyWidget,
                         ),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 80),
-                            itemCount: allItems.length,
-                            itemBuilder: (context, index) {
-                              final item = allItems[index];
-                              if (item is Folder) {
-                                return FolderCard(folder: item);
-                              } else {
-                                try {
-                                  if (item is VaultFile) {
-                                    return FileCard(file: item);
-                                  }
-                                  final dynamic dItem = item;
-                                  final fallbackFile = VaultFile(
-                                    id: dItem.id?.toString() ?? '',
-                                    folderId: dItem.folderId?.toString(),
-                                    title: dItem.title?.toString() ?? dItem.name?.toString() ?? 'Untitled Note',
-                                    description: dItem.description?.toString() ?? '',
-                                    createdAt: dItem.createdAt ?? DateTime.now(),
-                                    updatedAt: dItem.updatedAt ?? DateTime.now(),
-                                  );
-                                  return FileCard(file: fallbackFile);
-                                } catch (e) {
-                                  return const SizedBox.shrink();
-                                }
-                              }
-                            },
-                          ),
-                        ),
-                        if (!isSelecting) _buildBottomCreateButton(context)
-                        else _buildSelectionBottomBar(context, selectionState, allItems),
-                      ],
-                    );
-                  },
-                ),
-                  ));
+                      );
+                    },
+                  );
                 },
               );
             },
@@ -317,14 +340,14 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text("0 items", style: TextStyle(fontSize: 11, color: Color(0xFF9B8DB8))),
+            Text("0 items", style: TextStyle(fontSize: 11, color: context.subText)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
+                  color: context.highlightBg,
                   borderRadius: BorderRadius.circular(5)),
-              child: const Text("Empty",
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Color(0xFF6C5CE7))),
+              child: Text("Empty",
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: context.primaryColor)),
             ),
           ],
         ),
@@ -337,32 +360,34 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
+                  color: context.highlightBg,
                   borderRadius: BorderRadius.circular(16)),
-              child: const Icon(Icons.folder_open_outlined, size: 28, color: Color(0xFF6C5CE7)),
+              child: Icon(Icons.folder_open_outlined, size: 28, color: context.primaryColor),
             ),
             const SizedBox(height: 14),
-            const Text("Folder khali hai",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
+            Text("Folder is empty",
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: context.primaryText)),
             const SizedBox(height: 6),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
-                  "Is folder mein abhi kuch nahi.\nNaya note ya folder banayein.",
+                  "This folder is empty.\nCreate a new note or folder.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9B8DB8), height: 1.6)),
+                  style: TextStyle(fontSize: 12, color: context.subText, height: 1.6)),
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _chip(
+                  context,
                   icon: Icons.note_add_outlined,
                   label: "Note",
                   onTap: () => context.push('/create-note?folderId=${widget.folderId}'),
                 ),
                 const SizedBox(width: 8),
                 _chip(
+                  context,
                   icon: Icons.create_new_folder_outlined,
                   label: "Sub-folder",
                   onTap: () async {
@@ -399,7 +424,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
           icon: const Icon(Icons.add, size: 18),
           label: const Text("Create new", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6C5CE7),
+            backgroundColor: context.primaryColor,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -410,7 +435,8 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
     );
   }
 
-  Widget _chip({
+  Widget _chip(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
@@ -420,15 +446,15 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5)),
+            border: Border.all(color: context.border, width: 0.5)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: const Color(0xFF6C5CE7)),
+            Icon(icon, size: 14, color: context.primaryColor),
             const SizedBox(width: 5),
-            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF6C5CE7))),
+            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: context.primaryColor)),
           ],
         ),
       ),
@@ -438,9 +464,9 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
   Widget _buildSelectionBottomBar(BuildContext context, SelectionState state, List<dynamic> allItems) {
     return Container(
       padding: EdgeInsets.fromLTRB(14, 10, 14, MediaQuery.of(context).padding.bottom + 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE0D9F5), width: 0.5))),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        border: Border(top: BorderSide(color: context.border, width: 0.5))),
       child: Row(children: [
         // Delete action
         Expanded(
@@ -487,11 +513,11 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFC0392B)),
-            label: const Text("Delete", style: TextStyle(color: Color(0xFFC0392B))),
+            icon: Icon(Icons.delete_outline, size: 16, color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B)),
+            label: Text("Delete", style: TextStyle(color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B))),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              side: const BorderSide(color: Color(0xFFFFD5D5), width: 0.5),
+              side: BorderSide(color: context.isDark ? Colors.red.withValues(alpha: 0.3) : const Color(0xFFFFD5D5), width: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
           ),
         ),
@@ -519,7 +545,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
             icon: const Icon(Icons.drive_file_move_rounded, size: 16),
             label: const Text("Move"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C5CE7),
+              backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 12),

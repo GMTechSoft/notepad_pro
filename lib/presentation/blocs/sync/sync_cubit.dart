@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -8,18 +8,32 @@ import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/services/auth/auth_service.dart';
 import 'package:notepad_pro/services/google_drive_sync_service.dart';
 import 'package:notepad_pro/services/hive_service.dart';
+import 'package:notepad_pro/services/connectivity_service.dart';
+import 'package:notepad_pro/core/di/service_locator.dart';
 import 'sync_state.dart';
 
 class SyncCubit extends Cubit<SyncState> {
   final AuthService _authService;
   final GoogleDriveSyncService _syncService;
   final HiveService _hiveService;
+  
   bool _isSyncing = false;
+  bool _hasSyncError = false;
+  bool _isUserSignedIn = false;
+  ConnectionStatus _connectionStatus = ConnectionStatus.unknown;
+
   StreamSubscription<double>? _progressSubscription;
+  StreamSubscription<ConnectionStatus>? _connectivitySubscription;
+  StreamSubscription<BoxEvent>? _fileDeleteSubscription;
+  StreamSubscription<BoxEvent>? _noteDeleteSubscription;
+  StreamSubscription<BoxEvent>? _folderDeleteSubscription;
 
   SyncCubit(this._authService, this._syncService, this._hiveService) : super(const SyncState()) {
     // Listen to auth state changes from SyncService's broadcast stream
     _syncService.authStateStream.listen((user) async {
+      debugPrint('[SyncCubit] authStateStream: received user update: ${user?.email}');
+      _isUserSignedIn = (user != null);
+      
       if (user != null) {
         DateTime? parsedSyncTime;
         try {
@@ -33,18 +47,22 @@ class SyncCubit extends Cubit<SyncState> {
           // Persist session
           await configBox.put('is_logged_in', true);
           await configBox.put('user_email', user.email);
+          debugPrint('[SyncCubit] authStateStream: persisted session for ${user.email}');
         } catch (e) {
           debugPrint('Sync settings read/write error: $e');
         }
         
         emit(state.copyWith(
-          status: SyncStatus.synced,
           userName: user.displayName,
           userEmail: user.email,
           userPhotoUrl: user.photoUrl,
           lastSync: parsedSyncTime,
         ));
+        
+        // Fetch cloud items count upon sign in
+        updateCloudCount();
       } else {
+        debugPrint('[SyncCubit] authStateStream: user is null, clearing credentials');
         emit(const SyncState(status: SyncStatus.signedOut));
       }
       _updateLocalCounts();
@@ -55,13 +73,68 @@ class SyncCubit extends Cubit<SyncState> {
       emit(state.copyWith(progress: progress));
     });
 
-    // Listen to Hive changes to update total count
+    // Listen to Hive changes to update counts in real-time
     _hiveService.fileBox.listenable().addListener(_updateLocalCounts);
     _hiveService.noteBox.listenable().addListener(_updateLocalCounts);
     _hiveService.folderBox.listenable().addListener(_updateLocalCounts);
 
+    // Subscribe to Connectivity Changes
+    final connectivityService = sl<ConnectivityService>();
+    _connectivitySubscription = connectivityService.connectionStatusStream.listen(_handleConnectivityChange);
+    
+    // Check initial connectivity status
+    connectivityService.checkInitialConnectivity().then(_handleConnectivityChange);
+
+    // Listen to Hive deletion events to update cloud count
+    _fileDeleteSubscription = _hiveService.fileBox.watch().listen((event) {
+      if (event.deleted) updateCloudCount();
+    });
+    _noteDeleteSubscription = _hiveService.noteBox.watch().listen((event) {
+      if (event.deleted) updateCloudCount();
+    });
+    _folderDeleteSubscription = _hiveService.folderBox.watch().listen((event) {
+      if (event.deleted) updateCloudCount();
+    });
+
     // Persistent Login Check
     initialize();
+  }
+
+  void _handleConnectivityChange(ConnectionStatus connectionStatus) {
+    debugPrint('[SyncCubit] Connectivity changed to: $connectionStatus');
+    _connectionStatus = connectionStatus;
+    _updateSyncStatus();
+    
+    // Refresh cloud count and auto-sync on reconnect
+    if (connectionStatus == ConnectionStatus.online) {
+      updateCloudCount();
+      final pending = (_hiveService.fileBox.values.where((e) => !e.isSynced).length) +
+                      (_hiveService.noteBox.values.where((e) => !e.isSynced).length) +
+                      (_hiveService.folderBox.values.where((e) => !e.isSynced).length);
+      if (_isUserSignedIn && state.autoSync && state.offlineSync && pending > 0) {
+        debugPrint('[SyncCubit] Reconnected to internet, starting auto sync...');
+        performAutoSync();
+      }
+    }
+  }
+
+  void _updateSyncStatus() {
+    SyncStatus newStatus;
+    if (!_isUserSignedIn) {
+      newStatus = SyncStatus.signedOut;
+    } else if (_connectionStatus == ConnectionStatus.offline) {
+      newStatus = SyncStatus.offline;
+    } else if (_isSyncing) {
+      newStatus = SyncStatus.syncing;
+    } else if (_hasSyncError) {
+      newStatus = SyncStatus.error;
+    } else if (state.pendingFiles > 0) {
+      newStatus = SyncStatus.pending;
+    } else {
+      newStatus = SyncStatus.connected;
+    }
+    
+    emit(state.copyWith(status: newStatus));
   }
 
   void _updateLocalCounts() {
@@ -69,26 +142,43 @@ class SyncCubit extends Cubit<SyncState> {
                        _hiveService.noteBox.length + 
                        _hiveService.folderBox.length;
     
-    final syncedFilesCount = _hiveService.fileBox.values.where((e) => e.isSynced).length;
-    final syncedNotesCount = _hiveService.noteBox.values.where((e) => e.isSynced).length;
-    final syncedFoldersCount = _hiveService.folderBox.values.where((e) => e.isSynced).length;
-    final totalSyncedCount = syncedFilesCount + syncedNotesCount + syncedFoldersCount;
+    final unsyncedFilesCount = _hiveService.fileBox.values.where((e) => !e.isSynced).length;
+    final unsyncedNotesCount = _hiveService.noteBox.values.where((e) => !e.isSynced).length;
+    final unsyncedFoldersCount = _hiveService.folderBox.values.where((e) => !e.isSynced).length;
+    final totalUnsyncedCount = unsyncedFilesCount + unsyncedNotesCount + unsyncedFoldersCount;
 
     emit(state.copyWith(
       totalFiles: totalCount,
-      driveFiles: totalSyncedCount,
+      pendingFiles: totalUnsyncedCount,
     ));
 
+    _updateSyncStatus();
+  }
+
+  Future<void> updateCloudCount() async {
+    if (!_isUserSignedIn || _connectionStatus == ConnectionStatus.offline) {
+      return;
+    }
     try {
-      _hiveService.appSettingsBox.put('cloud_backup_count', totalSyncedCount);
+      final cloudCount = await _syncService.getCloudItemCount();
+      emit(state.copyWith(driveFiles: cloudCount));
     } catch (e) {
-      debugPrint('Sync settings write error: $e');
+      debugPrint('[SyncCubit] Error updating cloud count: $e');
+      final isNetworkError = e is SocketException || e.toString().contains('SocketException') || e.toString().contains('host lookup') || e.toString().contains('network') || e.toString().contains('Offline') || e.toString().contains('ClientException');
+      if (isNetworkError) {
+        _connectionStatus = ConnectionStatus.offline;
+        _updateSyncStatus();
+      }
     }
   }
 
   @override
   Future<void> close() {
     _progressSubscription?.cancel();
+    _connectivitySubscription?.cancel();
+    _fileDeleteSubscription?.cancel();
+    _noteDeleteSubscription?.cancel();
+    _folderDeleteSubscription?.cancel();
     _hiveService.fileBox.listenable().removeListener(_updateLocalCounts);
     _hiveService.noteBox.listenable().removeListener(_updateLocalCounts);
     _hiveService.folderBox.listenable().removeListener(_updateLocalCounts);
@@ -111,14 +201,14 @@ class SyncCubit extends Cubit<SyncState> {
         if (millis != null) {
           parsedSyncTime = DateTime.fromMillisecondsSinceEpoch(millis);
         } else {
-          parsedSyncTime = DateTime.tryParse(lastSyncTimeStr); // fallback for older ISO formats
+          parsedSyncTime = DateTime.tryParse(lastSyncTimeStr);
         }
       }
 
-      // If previously logged in, emit synced state early with cached email
+      _isUserSignedIn = isLoggedIn;
+
       if (isLoggedIn) {
         emit(state.copyWith(
-          status: SyncStatus.synced,
           userEmail: cachedEmail,
           lastSync: parsedSyncTime,
           driveFiles: cachedCount,
@@ -133,9 +223,11 @@ class SyncCubit extends Cubit<SyncState> {
       _updateLocalCounts();
 
       await _authService.signInSilently();
-      // If auto-sync is enabled and user is signed in, trigger a background sync
-      if (state.status != SyncStatus.signedOut && state.autoSync) {
-        await performAutoSync();
+      if (_isUserSignedIn) {
+        await updateCloudCount();
+        if (state.autoSync) {
+          await performAutoSync();
+        }
       }
     } catch (e) {
       debugPrint('SyncCubit initialization error: $e');
@@ -144,13 +236,23 @@ class SyncCubit extends Cubit<SyncState> {
   }
 
   Future<void> signIn() async {
+    debugPrint('[SyncCubit] signIn: triggering _syncService.signIn()');
     try {
       final user = await _syncService.signIn();
+      debugPrint('[SyncCubit] signIn: _syncService.signIn() returned user: ${user?.email}');
       if (user != null) {
+        _isUserSignedIn = true;
+        debugPrint('[SyncCubit] signIn: user is not null, initiating backupNow()');
         await backupNow();
+      } else {
+        debugPrint('[SyncCubit] signIn: user is null, sign in not completed');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[SyncCubit] signIn: exception caught: $e');
+      debugPrint(stack.toString());
+      _hasSyncError = true;
       emit(state.copyWith(errorMessage: e.toString()));
+      _updateSyncStatus();
     }
   }
 
@@ -159,22 +261,42 @@ class SyncCubit extends Cubit<SyncState> {
       final configBox = _hiveService.appSettingsBox;
       await configBox.put('is_logged_in', false);
       await configBox.delete('user_email');
+      _isUserSignedIn = false;
+      _hasSyncError = false;
       await _syncService.signOut();
+      emit(const SyncState(status: SyncStatus.signedOut));
     } catch (e) {
+      _hasSyncError = true;
       emit(state.copyWith(errorMessage: e.toString()));
+      _updateSyncStatus();
     }
   }
 
   Future<void> backupNow() async {
+    debugPrint('[SyncCubit] backupNow: checking sync status. _isSyncing = $_isSyncing');
+    if (_connectionStatus == ConnectionStatus.offline) {
+      emit(state.copyWith(
+        status: SyncStatus.offline,
+        errorMessage: null,
+      ));
+      return;
+    }
     if (_isSyncing) return;
     _isSyncing = true;
+    _hasSyncError = false;
+    _updateSyncStatus();
     
-    emit(state.copyWith(status: SyncStatus.pending));
     try {
+      debugPrint('[SyncCubit] backupNow: calling _syncService.uploadBackupToDrive()');
       await _syncService.uploadBackupToDrive();
+      debugPrint('[SyncCubit] backupNow: uploadBackupToDrive finished successfully');
       
       final now = DateTime.now();
-      _updateLocalCounts(); // This recalculates totalSyncedCount
+      _hasSyncError = false;
+      
+      // Update local boxes synced state & then update counts
+      _updateLocalCounts();
+      await updateCloudCount();
       
       try {
         final configBox = _hiveService.appSettingsBox;
@@ -185,35 +307,59 @@ class SyncCubit extends Cubit<SyncState> {
       }
 
       emit(state.copyWith(
-        status: SyncStatus.synced,
         lastSync: now,
       ));
     } catch (e) {
-      emit(state.copyWith(
-        status: SyncStatus.error,
-        errorMessage: e.toString(),
-      ));
+      final isNetworkError = e is SocketException || e.toString().contains('SocketException') || e.toString().contains('host lookup') || e.toString().contains('network') || e.toString().contains('Offline') || e.toString().contains('ClientException');
+      if (isNetworkError) {
+        _hasSyncError = false;
+        _connectionStatus = ConnectionStatus.offline;
+        emit(state.copyWith(
+          status: SyncStatus.offline,
+          errorMessage: null,
+        ));
+      } else {
+        _hasSyncError = true;
+        emit(state.copyWith(
+          errorMessage: e.toString(),
+        ));
+      }
+      await updateCloudCount();
     } finally {
       _isSyncing = false;
+      _updateSyncStatus();
     }
   }
 
   Future<void> restoreNow({BuildContext? context}) async {
+    if (_connectionStatus == ConnectionStatus.offline) {
+      emit(state.copyWith(
+        status: SyncStatus.offline,
+        errorMessage: null,
+      ));
+      return;
+    }
     if (_isSyncing) return;
     _isSyncing = true;
+    _hasSyncError = false;
+    _updateSyncStatus();
 
-    emit(state.copyWith(status: SyncStatus.pending));
     try {
       await _syncService.restoreBackupFromDrive();
       await _hiveService.refreshBoxes();
 
       if (context != null && context.mounted) {
         await context.read<FoldersCubit>().loadFolders();
-        await context.read<FilesCubit>().loadFiles();
+        if (context.mounted) {
+          await context.read<FilesCubit>().loadFiles();
+        }
       }
       
       final now = DateTime.now();
+      _hasSyncError = false;
+      
       _updateLocalCounts();
+      await updateCloudCount();
       
       try {
         final configBox = _hiveService.appSettingsBox;
@@ -224,26 +370,45 @@ class SyncCubit extends Cubit<SyncState> {
       }
 
       emit(state.copyWith(
-        status: SyncStatus.synced,
         lastSync: now,
       ));
     } catch (e) {
-      emit(state.copyWith(
-        status: SyncStatus.error,
-        errorMessage: e.toString(),
-      ));
+      final isNetworkError = e is SocketException || e.toString().contains('SocketException') || e.toString().contains('host lookup') || e.toString().contains('network') || e.toString().contains('Offline') || e.toString().contains('ClientException');
+      if (isNetworkError) {
+        _hasSyncError = false;
+        _connectionStatus = ConnectionStatus.offline;
+        emit(state.copyWith(
+          status: SyncStatus.offline,
+          errorMessage: null,
+        ));
+      } else {
+        _hasSyncError = true;
+        emit(state.copyWith(
+          errorMessage: e.toString(),
+        ));
+      }
+      await updateCloudCount();
     } finally {
       _isSyncing = false;
+      _updateSyncStatus();
     }
   }
 
   Future<void> performAutoSync() async {
-    if (state.status == SyncStatus.signedOut || !state.autoSync) return;
-    await backupNow();
+    if (!_isUserSignedIn) return;
+    if (_connectionStatus == ConnectionStatus.offline) return;
+    
+    final pending = (_hiveService.fileBox.values.where((e) => !e.isSynced).length) +
+                    (_hiveService.noteBox.values.where((e) => !e.isSynced).length) +
+                    (_hiveService.folderBox.values.where((e) => !e.isSynced).length);
+                    
+    if (state.autoSync && state.offlineSync && pending > 0) {
+      await backupNow();
+    }
   }
 
   Future<void> syncNow() async {
-    if (state.status == SyncStatus.signedOut) return;
+    if (!_isUserSignedIn) return;
     await backupNow();
   }
 
@@ -260,6 +425,7 @@ class SyncCubit extends Cubit<SyncState> {
       status: SyncStatus.pending,
       totalFiles: 29,
       driveFiles: 24,
+      pendingFiles: 5,
     ));
   }
 }

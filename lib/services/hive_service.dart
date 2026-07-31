@@ -155,7 +155,7 @@ class HiveService extends ChangeNotifier {
 
   // Debug helper method
   void debugPrintInfo(String context) {
-    final serviceHash = this.hashCode;
+    final serviceHash = hashCode;
     final folderBoxHash = _folderBox.hashCode;
     final fileBoxHash = _fileBox.hashCode;
     final folderCount = _folderBox.length;

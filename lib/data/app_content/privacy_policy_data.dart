@@ -43,7 +43,7 @@ class PrivacyPolicyData {
       bullets: [
         BulletData(bold: "Information you create", normal: " — Any notes, folders, or references you create are stored entirely locally on your device."),
         BulletData(bold: "Google Account (optional)", normal: " — If you choose to sign in with Google, the application may temporarily access your basic Google account information (such as your name and email address) solely for authentication and Google Drive backup. This information is never stored on GMTechSoft servers."),
-        BulletData(bold: "Information we do NOT collect", normal: " — We do not collect usage analytics, crash reports, or device identifiers. We do not track your behavior or share any data with advertising networks."),
+        BulletData(bold: "Information we do NOT collect", normal: " — We do not collect usage analytics, crash reports, or device identifiers. NotePilot follows your device's system appearance automatically and does not store or collect manual theme selection preferences. We do not track your behavior or share any data with advertising networks."),
       ]
     ),
     BulletSectionData(

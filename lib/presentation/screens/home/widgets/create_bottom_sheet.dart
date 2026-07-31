@@ -5,13 +5,21 @@ import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 
 void showCreateBottomSheet(BuildContext context, {String? parentFolderId}) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final folderIconBg = theme.colorScheme.primaryContainer;
+  final folderIconColor = theme.colorScheme.primary;
+
+  final noteIconBg = isDark ? const Color(0xFF1B3D32) : const Color(0xFFE1F5EE);
+  final noteIconColor = isDark ? const Color(0xFF81C784) : const Color(0xFF0F6E56);
+
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFFFAFAFF),
+    backgroundColor: theme.scaffoldBackgroundColor,
     barrierColor: Colors.black.withValues(alpha: 0.5),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      side: BorderSide(color: Color(0xFFE0D9F5), width: 0.5),
+    shape: RoundedRectangleBorder(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      side: BorderSide(color: theme.colorScheme.outline, width: 0.5),
     ),
     builder: (ctx) {
       return SafeArea(
@@ -26,28 +34,29 @@ void showCreateBottomSheet(BuildContext context, {String? parentFolderId}) {
                 height: 4,
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD0C8E8),
+                  color: theme.colorScheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               
               // Section Title
-              const Text(
+              Text(
                 'CREATE NEW',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.05 * 11, // letter-spacing 0.05em
-                  color: Color(0xFF9B8DB8),
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
               
               // Option 1: Folder
               _buildOptionCard(
+                context,
                 icon: Icons.create_new_folder_outlined,
-                iconColor: const Color(0xFF6C5CE7),
-                iconBg: const Color(0xFFEDE9F8),
+                iconColor: folderIconColor,
+                iconBg: folderIconBg,
                 title: 'Folder',
                 subtitle: 'Group your notes together',
                 onTap: () async {
@@ -70,9 +79,10 @@ void showCreateBottomSheet(BuildContext context, {String? parentFolderId}) {
               
               // Option 2: Note / File
               _buildOptionCard(
+                context,
                 icon: Icons.note_add_outlined,
-                iconColor: const Color(0xFF0F6E56),
-                iconBg: const Color(0xFFE1F5EE),
+                iconColor: noteIconColor,
+                iconBg: noteIconBg,
                 title: 'Note / File',
                 subtitle: 'Write something new',
                 onTap: () {
@@ -93,18 +103,18 @@ void showCreateBottomSheet(BuildContext context, {String? parentFolderId}) {
                 child: TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFF0EBF8),
+                    backgroundColor: theme.colorScheme.primaryContainer,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Cancel',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF6C5CE7),
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                 ),
@@ -118,7 +128,8 @@ void showCreateBottomSheet(BuildContext context, {String? parentFolderId}) {
   );
 }
 
-Widget _buildOptionCard({
+Widget _buildOptionCard(
+  BuildContext context, {
   required IconData icon,
   required Color iconColor,
   required Color iconBg,
@@ -126,6 +137,7 @@ Widget _buildOptionCard({
   required String subtitle,
   required VoidCallback onTap,
 }) {
+  final theme = Theme.of(context);
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),
@@ -133,9 +145,9 @@ Widget _buildOptionCard({
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        border: Border.all(color: theme.colorScheme.outline, width: 0.5),
       ),
       child: Row(
         children: [
@@ -158,17 +170,17 @@ Widget _buildOptionCard({
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF2D2540),
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF9B8DB8),
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -176,9 +188,9 @@ Widget _buildOptionCard({
           ),
           
           // Chevron Right
-          const Icon(
+          Icon(
             Icons.chevron_right,
-            color: Color(0xFFC4B8E0),
+            color: theme.colorScheme.outline,
             size: 20,
           ),
         ],
@@ -186,4 +198,3 @@ Widget _buildOptionCard({
     ),
   );
 }
-

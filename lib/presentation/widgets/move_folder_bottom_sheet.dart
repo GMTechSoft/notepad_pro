@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notepad_pro/domain/entities/folder.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 /// Shows a modal bottom sheet that lets the user move a [Folder] to a different parent folder.
 /// It uses the [FoldersCubit] to load folders and calls [FoldersCubit.moveFolder] when a target is selected.
@@ -12,7 +13,7 @@ void showMoveFolderBottomSheet(BuildContext context, Folder currentFolder) {
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFFFAFAFF),
+    backgroundColor: context.scaffoldBg,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -20,7 +21,7 @@ void showMoveFolderBottomSheet(BuildContext context, Folder currentFolder) {
       return BlocBuilder<FoldersCubit, FoldersState>(
         builder: (context, state) {
           if (state is! FoldersLoadSuccess) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(context.primaryColor)));
           }
 
           final folders = state.folders.where((f) => f.id != currentFolder.id).toList();
@@ -33,30 +34,30 @@ void showMoveFolderBottomSheet(BuildContext context, Folder currentFolder) {
                   margin: const EdgeInsets.only(top: 9, bottom: 8),
                   width: 32,
                   height: 4,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD0C8E8),
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: context.border,
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
-                const Text(
+                Text(
                   "SELECT TARGET FOLDER",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF9B8DB8)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.subText),
                 ),
                 const SizedBox(height: 8),
                 // Root / Home option
                 ListTile(
-                  leading: const Icon(Icons.home_outlined, color: Color(0xFF6C5CE7)),
-                  title: const Text(
+                  leading: Icon(Icons.home_outlined, color: context.primaryColor),
+                  title: Text(
                     "Root / Home",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                   ),
-                  trailing: currentFolder.parentId == null ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                  trailing: currentFolder.parentId == null ? Icon(Icons.check, color: context.primaryColor) : null,
                   onTap: () {
                     context.read<FoldersCubit>().moveFolder(folderId: currentFolder.id, targetParentId: null);
                     Navigator.pop(ctx);
                   },
                 ),
-                const Divider(height: 1, thickness: 0.5),
+                Divider(height: 1, thickness: 0.5, color: context.border),
                 // Folder list
                 Expanded(
                   child: ListView.builder(
@@ -65,9 +66,9 @@ void showMoveFolderBottomSheet(BuildContext context, Folder currentFolder) {
                       final folder = folders[index];
                       final isCurrentParent = currentFolder.parentId == folder.id;
                       return ListTile(
-                        leading: const Icon(Icons.folder, color: Color(0xFF6C5CE7)),
-                        title: Text(folder.name, style: const TextStyle(fontSize: 13)),
-                        trailing: isCurrentParent ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                        leading: Icon(Icons.folder, color: context.primaryColor),
+                        title: Text(folder.name, style: TextStyle(fontSize: 13, color: context.primaryText)),
+                        trailing: isCurrentParent ? Icon(Icons.check, color: context.primaryColor) : null,
                         onTap: isCurrentParent
                             ? null
                             : () {
@@ -81,7 +82,7 @@ void showMoveFolderBottomSheet(BuildContext context, Folder currentFolder) {
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF6C5CE7))),
+                  child: Text('Cancel', style: TextStyle(color: context.primaryColor)),
                 ),
               ],
             ),

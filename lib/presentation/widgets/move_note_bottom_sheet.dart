@@ -4,6 +4,7 @@ import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 /// Shows a modal bottom sheet that lets the user move a [VaultFile] to a different folder.
 /// This function is defined as a top‑level helper so it can be called from any widget
@@ -16,7 +17,7 @@ void showMoveNoteBottomSheet(BuildContext context, VaultFile currentFile) {
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFFFAFAFF),
+    backgroundColor: context.scaffoldBg,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -24,7 +25,7 @@ void showMoveNoteBottomSheet(BuildContext context, VaultFile currentFile) {
       return BlocBuilder<FoldersCubit, FoldersState>(
         builder: (context, state) {
           if (state is! FoldersLoadSuccess) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(context.primaryColor)));
           }
 
           final folders = state.folders;
@@ -37,30 +38,30 @@ void showMoveNoteBottomSheet(BuildContext context, VaultFile currentFile) {
                   margin: const EdgeInsets.only(top: 9, bottom: 8),
                   width: 32,
                   height: 4,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD0C8E8),
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: context.border,
+                    borderRadius: const BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
-                const Text(
+                Text(
                   "SELECT TARGET FOLDER",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF9B8DB8)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.subText),
                 ),
                 const SizedBox(height: 8),
                 // Root / Home option
                 ListTile(
-                  leading: const Icon(Icons.home_outlined, color: Color(0xFF6C5CE7)),
-                  title: const Text(
+                  leading: Icon(Icons.home_outlined, color: context.primaryColor),
+                  title: Text(
                     "Root / Home",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                   ),
-                  trailing: currentFile.folderId == null ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                  trailing: currentFile.folderId == null ? Icon(Icons.check, color: context.primaryColor) : null,
                   onTap: () {
                     context.read<FilesCubit>().moveFileToFolder(fileId: currentFile.id, targetFolderId: null);
                     Navigator.pop(ctx);
                   },
                 ),
-                const Divider(height: 1, thickness: 0.5),
+                Divider(height: 1, thickness: 0.5, color: context.border),
                 // Folder list
                 Expanded(
                   child: ListView.builder(
@@ -69,9 +70,9 @@ void showMoveNoteBottomSheet(BuildContext context, VaultFile currentFile) {
                       final folder = folders[index];
                       final isCurrentFolder = currentFile.folderId == folder.id;
                       return ListTile(
-                        leading: const Icon(Icons.folder, color: Color(0xFF6C5CE7)),
-                        title: Text(folder.name, style: const TextStyle(fontSize: 13)),
-                        trailing: isCurrentFolder ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                        leading: Icon(Icons.folder, color: context.primaryColor),
+                        title: Text(folder.name, style: TextStyle(fontSize: 13, color: context.primaryText)),
+                        trailing: isCurrentFolder ? Icon(Icons.check, color: context.primaryColor) : null,
                         onTap: isCurrentFolder
                             ? null
                             : () {
@@ -85,7 +86,7 @@ void showMoveNoteBottomSheet(BuildContext context, VaultFile currentFile) {
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF6C5CE7))),
+                  child: Text('Cancel', style: TextStyle(color: context.primaryColor)),
                 ),
               ],
             ),

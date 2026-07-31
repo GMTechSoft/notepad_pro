@@ -39,6 +39,7 @@ class FileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     const Color fileColor = Color(0xFF0F6E56); // Teal for files
     final isSelected = context.select<SelectionCubit, bool>((cubit) => cubit.state.selectedMap.containsKey(file.id));
     final isSelectionMode = context.select<SelectionCubit, bool>((cubit) => cubit.state.isSelectionMode);
@@ -55,10 +56,10 @@ class FileCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEDE9F8) : Colors.white,
+          color: isSelected ? theme.colorScheme.primaryContainer : theme.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFE0D9F5), 
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline, 
             width: isSelected ? 1.5 : 0.5
           ),
         ),
@@ -93,27 +94,27 @@ class FileCard extends StatelessWidget {
               ),
               title: Text(
                 file.title, 
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 13,
-                  color: Color(0xFF2D2540),
+                  color: theme.colorScheme.onSurface,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
                 '${file.description.isEmpty ? "No description" : file.description} · ${DateFormatter.getFormattedDate(file.updatedAt)}',
-                style: const TextStyle(
-                  color: Color(0xFF9B8DB8),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 10,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               trailing: isSelected 
-                ? const Icon(Icons.check_circle_rounded, color: Color(0xFF6C5CE7), size: 22)
+                ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 22)
                 : (isSelectionMode ? null : PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Color(0xFFC4B8E0)),
+                icon: Icon(Icons.more_vert, color: theme.colorScheme.outline),
                 onSelected: (value) {
                   if (value == 'edit') {
                       context.push('/create-file', extra: file);
@@ -132,11 +133,11 @@ class FileCard extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'move',
                     child: ListTile(
-                      leading: Icon(Icons.drive_file_move_outline, color: Color(0xFF6C5CE7)),
-                      title: Text('Move'),
+                      leading: Icon(Icons.drive_file_move_outline, color: theme.colorScheme.primary),
+                      title: const Text('Move'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

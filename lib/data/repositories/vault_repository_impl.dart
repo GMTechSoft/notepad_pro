@@ -66,7 +66,7 @@ class VaultRepositoryImpl implements IVaultRepository {
 
   @override
   Future<void> updateFolder(Folder folder) async {
-    final folderModel = FolderModel.fromEntity(folder);
+    final folderModel = FolderModel.fromEntity(folder.copyWith(isSynced: false));
     await _hiveService.updateFolder(folderModel);
   }
 
@@ -136,7 +136,7 @@ class VaultRepositoryImpl implements IVaultRepository {
 
   @override
   Future<void> updateFile(VaultFile file) async {
-    final fileModel = VaultFileModel.fromEntity(file);
+    final fileModel = VaultFileModel.fromEntity(file.copyWith(isSynced: false));
     await _hiveService.updateFile(fileModel);
   }
 
@@ -161,7 +161,7 @@ class VaultRepositoryImpl implements IVaultRepository {
     final fileModel = await _hiveService.getFile(fileId);
     if (fileModel == null) return;
     
-    final updatedModel = fileModel.copyWith(folderId: targetFolderId);
+    final updatedModel = fileModel.copyWith(folderId: targetFolderId, isSynced: false);
     await _hiveService.updateFile(updatedModel);
     
     // Trigger non-blocking cloud backup so location modifications sync right away
@@ -180,7 +180,7 @@ class VaultRepositoryImpl implements IVaultRepository {
           throw Exception('Invalid move: target folder is a descendant of the source folder.');
         }
       }
-      final updatedFolder = folder.copyWith(parentId: newParentFolderId);
+      final updatedFolder = folder.copyWith(parentId: newParentFolderId, isSynced: false);
       await _hiveService.updateFolder(updatedFolder);
       _triggerAsyncCloudSync();
       return;

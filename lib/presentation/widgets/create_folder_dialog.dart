@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class FolderColor {
   final String name;
@@ -55,7 +56,7 @@ Future<Map<String, dynamic>?> showCreateFolderDialog(
 }) {
   return showModalBottomSheet<Map<String, dynamic>>(
     context: context,
-    backgroundColor: const Color(0xFFFAFAFF),
+    backgroundColor: context.scaffoldBg,
     isScrollControlled: true,
     useSafeArea: true,
     shape: const RoundedRectangleBorder(
@@ -103,11 +104,11 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
     if (widget.initialColorValue != null) {
       final allColors = [...warmColors, ...coolColors, ...neutralColors];
       selectedColor = allColors.firstWhere(
-        (c) => c.mainColor.value == widget.initialColorValue,
+        (c) => c.mainColor.toARGB32() == widget.initialColorValue,
         orElse: () => FolderColor(
           name: 'Custom',
           mainColor: Color(widget.initialColorValue!),
-          lightBg: Color(widget.initialLightBgColorValue ?? Color(0xFFEDE9F8).value),
+          lightBg: Color(widget.initialLightBgColorValue ?? const Color(0xFFEDE9F8).toARGB32()),
           darkIcon: Color(widget.initialDarkIconColorValue ?? widget.initialColorValue!),
         ),
       );
@@ -145,12 +146,12 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Create new folder",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF2D2540),
+                  color: context.primaryText,
                 ),
               ),
               const SizedBox(height: 14),
@@ -165,24 +166,24 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                         folderName = val;
                       });
                     },
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
+                    style: TextStyle(fontSize: 13, color: context.primaryText),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.fromLTRB(48, 10, 12, 10),
-                      fillColor: const Color(0xFFF5F0FF),
+                      fillColor: context.highlightBg,
                       filled: true,
-                      hintText: "Folder ka naam likhein...",
-                      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFB0A0CC)),
+                      hintText: "Enter folder name...",
+                      hintStyle: TextStyle(fontSize: 13, color: context.subText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFD8D0F0), width: 0.5),
+                        borderSide: BorderSide(color: context.border, width: 0.5),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFD8D0F0), width: 0.5),
+                        borderSide: BorderSide(color: context.border, width: 0.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 1.0),
+                        borderSide: BorderSide(color: context.primaryColor, width: 1.0),
                       ),
                     ),
                   ),
@@ -205,23 +206,23 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(top: 4, left: 2),
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 2),
                 child: Text(
-                  "Naam dikhaye ga folder card mein",
-                  style: TextStyle(fontSize: 10, color: Color(0xFF9B8DB8)),
+                  "This name will be shown on the folder card",
+                  style: TextStyle(fontSize: 10, color: context.subText),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    "COLOR CHUNEIN",
+                  Text(
+                    "SELECT COLOR",
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF9B8DB8),
+                      color: context.subText,
                       letterSpacing: 0.04,
                     ),
                   ),
@@ -230,7 +231,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5F0FF),
+                          color: context.highlightBg,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -246,10 +247,10 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                             const SizedBox(width: 6),
                             Text(
                               selectedColor.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF6C5CE7),
+                                color: context.primaryColor,
                               ),
                             ),
                           ],
@@ -261,19 +262,19 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEDE9F8),
+                            color: context.highlightBg,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(Icons.refresh, size: 11, color: Color(0xFF6C5CE7)),
-                              SizedBox(width: 4),
+                              Icon(Icons.refresh, size: 11, color: context.primaryColor),
+                              const SizedBox(width: 4),
                               Text(
                                 "Default",
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6C5CE7),
+                                  color: context.primaryColor,
                                 ),
                               ),
                             ],
@@ -299,16 +300,16 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0EBF8),
+                          color: context.highlightBg,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           "Cancel",
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF6C5CE7),
+                            color: context.primaryColor,
                           ),
                         ),
                       ),
@@ -320,15 +321,15 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                       onTap: canCreate ? () {
                         Navigator.pop(context, {
                           'name': folderName,
-                          'colorValue': selectedColor.mainColor.value,
-                          'lightBgColorValue': selectedColor.lightBg.value,
-                          'darkIconColorValue': selectedColor.darkIcon.value,
+                          'colorValue': selectedColor.mainColor.toARGB32(),
+                          'lightBgColorValue': selectedColor.lightBg.toARGB32(),
+                          'darkIconColorValue': selectedColor.darkIcon.toARGB32(),
                         });
                       } : null,
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: canCreate ? const Color(0xFF6C5CE7) : const Color(0xFFD8D0F0),
+                          color: canCreate ? context.primaryColor : context.border,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
@@ -366,9 +367,9 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
-            color: Color(0xFFB0A0CC),
+            color: context.subText,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -383,7 +384,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
   }
 
   Widget _buildColorSwatch(FolderColor folderColor) {
-    final bool isSelected = selectedColor.mainColor.value == folderColor.mainColor.value;
+    final bool isSelected = selectedColor.mainColor.toARGB32() == folderColor.mainColor.toARGB32();
     
     return GestureDetector(
       onTap: () => selectColor(folderColor),
@@ -391,7 +392,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
         width: 32,
         height: 32,
         decoration: isSelected ? BoxDecoration(
-          border: Border.all(color: const Color(0xFF6C5CE7), width: 2.5),
+          border: Border.all(color: context.primaryColor, width: 2.5),
           borderRadius: BorderRadius.circular(16),
         ) : null,
         padding: isSelected ? const EdgeInsets.all(1) : EdgeInsets.zero,

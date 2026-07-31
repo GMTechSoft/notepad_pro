@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _loadingAnimation;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -29,6 +31,13 @@ class _SplashScreenState extends State<SplashScreen>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2500),
       vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.2, curve: Curves.easeIn),
+      ),
     );
 
     _loadingAnimation = Tween<double>(
@@ -62,6 +71,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = (screenWidth * 0.35).clamp(140.0, 250.0);
+
     return Scaffold(
       backgroundColor: const Color(0xFF1E1635),
       body: Stack(
@@ -73,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFF6C5CE7).withOpacity(0.06),
+                color: const Color(0xFF6C5CE7).withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
             ),
@@ -85,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: const Color(0xFF9B8DB8).withOpacity(0.06),
+                color: const Color(0xFF9B8DB8).withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
             ),
@@ -94,69 +106,37 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 112,
-                  height: 112,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 112,
-                        height: 112,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(34),
-                          border: Border.all(
-                            color: const Color(0xFF6C5CE7).withOpacity(0.15),
-                            width: 0.5,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
-                            color: const Color(0xFF6C5CE7).withOpacity(0.35),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6C5CE7),
-                          borderRadius: BorderRadius.circular(22),
-                        ),
-                        child: const Icon(
-                          Icons.shield_outlined,
-                          size: 38,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Image.asset(
+                    'assets/playstore.png',
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
                   ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   'NotePilot',
                   style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    letterSpacing: 0.3,
+                    letterSpacing: 0.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 20),
                 Text(
-                  'SECURE  ·  PRIVATE  ·  YOURS',
+                  'Developed by GMTechSoft',
                   style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.45),
-                    letterSpacing: 2.5,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.6),
+                    letterSpacing: 0.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 Column(
@@ -165,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 140,
                       height: 3,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.10),
+                        color: Colors.white.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: AnimatedBuilder(
@@ -186,10 +166,10 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Vault tayar ho raha hai...',
+                      'Preparing vault...',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.35),
+                        color: Colors.white.withValues(alpha: 0.35),
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -207,7 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 letterSpacing: 1.5,
               ),
             ),

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum SyncStatus { signedOut, synced, pending, error }
+enum SyncStatus { signedOut, connected, syncing, pending, offline, error }
 
 class SyncState extends Equatable {
   final SyncStatus status;
@@ -9,6 +9,7 @@ class SyncState extends Equatable {
   final DateTime? lastSync;
   final int totalFiles;
   final int driveFiles;
+  final int pendingFiles;
   final double progress;
   final bool autoSync;
   final bool offlineSync;
@@ -24,6 +25,7 @@ class SyncState extends Equatable {
     this.lastSync,
     this.totalFiles = 0,
     this.driveFiles = 0,
+    this.pendingFiles = 0,
     this.progress = 0.0,
     this.autoSync = true,
     this.offlineSync = true,
@@ -38,6 +40,7 @@ class SyncState extends Equatable {
     DateTime? lastSync,
     int? totalFiles,
     int? driveFiles,
+    int? pendingFiles,
     double? progress,
     bool? autoSync,
     bool? offlineSync,
@@ -51,6 +54,7 @@ class SyncState extends Equatable {
       lastSync: lastSync ?? this.lastSync,
       totalFiles: totalFiles ?? this.totalFiles,
       driveFiles: driveFiles ?? this.driveFiles,
+      pendingFiles: pendingFiles ?? this.pendingFiles,
       progress: progress ?? this.progress,
       autoSync: autoSync ?? this.autoSync,
       offlineSync: offlineSync ?? this.offlineSync,
@@ -67,6 +71,7 @@ class SyncState extends Equatable {
         lastSync,
         totalFiles,
         driveFiles,
+        pendingFiles,
         progress,
         autoSync,
         offlineSync,

@@ -11,7 +11,6 @@ import 'package:notepad_pro/presentation/screens/settings/settings_screen.dart';
 import 'package:notepad_pro/presentation/screens/search/search_screen.dart';
 import 'package:notepad_pro/presentation/screens/splash_screen.dart';
 import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
-import 'package:notepad_pro/presentation/blocs/theme/theme_cubit.dart';
 import 'package:notepad_pro/presentation/screens/folders/move_item_screen.dart';
 
 class AppRouter {
@@ -116,11 +115,8 @@ class AppRouter {
       GoRoute(
         name: 'settings',
         path: '/settings',
-        builder: (context, state) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: context.read<SyncCubit>()),
-            BlocProvider.value(value: context.read<ThemeCubit>()),
-          ],
+        builder: (context, state) => BlocProvider.value(
+          value: context.read<SyncCubit>(),
           child: const SettingsScreen(),
         ),
       ),

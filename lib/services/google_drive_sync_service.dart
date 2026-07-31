@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as ga;
@@ -11,6 +12,7 @@ import 'package:notepad_pro/data/models/note_model.dart';
 import 'package:notepad_pro/data/models/vault_file_model.dart';
 import 'package:notepad_pro/services/hive_service.dart';
 import 'package:notepad_pro/services/auth/auth_service.dart';
+import 'package:notepad_pro/services/connectivity_service.dart';
 import 'package:notepad_pro/core/di/service_locator.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
@@ -32,13 +34,52 @@ class GoogleDriveSyncService {
   Future<GoogleSignInAccount?> signIn() => _authService.signInWithGoogle();
   Future<void> signOut() => _authService.signOut();
 
-  /// Authenticate and initialize the Google Drive API client
   Future<ga.DriveApi?> _getDriveApi() async {
-    final GoogleSignInAccount? account = await _authService.signInSilently() ??
-        await _authService.signInWithGoogle();
-    if (account == null) return null;
+    final connectivity = sl<ConnectivityService>();
+    final status = await connectivity.checkInitialConnectivity();
+    if (status == ConnectionStatus.offline) {
+      throw const SocketException('No internet connection');
+    }
 
+    debugPrint('[DriveSync] _getDriveApi: checking currentUser');
+    GoogleSignInAccount? account = _authService.currentUser;
+    if (account != null) {
+      debugPrint('[DriveSync] _getDriveApi: currentUser is already not null (${account.email}), validating token and scopes');
+      final bool isValid = await _authService.validateCurrentUser(account);
+      if (isValid) {
+        debugPrint('[DriveSync] _getDriveApi: currentUser is valid, continuing');
+      } else {
+        debugPrint('[DriveSync] _getDriveApi: currentUser is invalid or lacks scopes, resetting account to null');
+        account = null;
+      }
+    }
+
+    if (account == null) {
+      debugPrint('[DriveSync] _getDriveApi: trying silent sign-in');
+      account = await _authService.signInSilently();
+      if (account != null) {
+        debugPrint('[DriveSync] _getDriveApi: silent sign-in succeeded (${account.email})');
+      }
+    }
+
+    if (account == null) {
+      debugPrint('[DriveSync] _getDriveApi: silent sign-in returned null, trying full sign-in');
+      account = await _authService.signInWithGoogle();
+      if (account != null) {
+        debugPrint('[DriveSync] _getDriveApi: full sign-in succeeded (${account.email})');
+      } else {
+        debugPrint('[DriveSync] _getDriveApi: full sign-in returned null');
+      }
+    }
+
+    if (account == null) {
+      debugPrint('[DriveSync] _getDriveApi: all authentication attempts failed, returning null');
+      return null;
+    }
+
+    debugPrint('[DriveSync] _getDriveApi: fetching auth headers');
     final authHeaders = await account.authHeaders;
+    debugPrint('[DriveSync] _getDriveApi: auth headers fetched successfully');
     final authenticateClient = GoogleAuthClient(authHeaders);
     return ga.DriveApi(authenticateClient);
   }
@@ -448,6 +489,99 @@ class GoogleDriveSyncService {
     }
     final String content = utf8.decode(bytes);
     return jsonDecode(content) as Map<String, dynamic>;
+  }
+
+  Future<int> getCloudItemCount() async {
+    final driveApi = await _getDriveApi();
+    if (driveApi == null) return 0;
+    try {
+      final String? appRootId = await _findDriveFolder(driveApi, 'Smart_Notes_Backup_Root');
+      if (appRootId == null) {
+        debugPrint('Local items: 0');
+        debugPrint('Cloud items: 0');
+        debugPrint('Cloud item names:');
+        debugPrint('Final driveFiles count: 0');
+        return 0;
+      }
+
+      final allFolders = await _listAllFolders(driveApi);
+      final allFiles = await _listAllJsonFiles(driveApi);
+
+      // Find Uncategorized Notes folder (direct child of appRootId)
+      String? uncategorizedId;
+      for (final folder in allFolders) {
+        if (folder.parents?.contains(appRootId) == true && folder.name == 'Uncategorized Notes') {
+          uncategorizedId = folder.id;
+          break;
+        }
+      }
+
+      final Set<String> userFolderIds = {};
+      final Set<String> structuralFolderIds = {appRootId};
+      if (uncategorizedId != null) {
+        structuralFolderIds.add(uncategorizedId);
+      }
+
+      // Recursively identify user folders
+      bool changed = true;
+      while (changed) {
+        changed = false;
+        for (final folder in allFolders) {
+          final folderId = folder.id;
+          if (folderId == null) continue;
+          if (userFolderIds.contains(folderId) || structuralFolderIds.contains(folderId)) {
+            continue;
+          }
+
+          final hasValidParent = folder.parents?.any((parentId) =>
+            parentId == appRootId && folderId != uncategorizedId ||
+            userFolderIds.contains(parentId)
+          ) ?? false;
+
+          if (hasValidParent) {
+            userFolderIds.add(folderId);
+            changed = true;
+          }
+        }
+      }
+
+      // Identify user files (MIME type is application/json and parent is uncategorizedId or a user folder)
+      final List<ga.File> userFiles = [];
+      for (final file in allFiles) {
+        final parentId = file.parents?.firstOrNull;
+        if (parentId == null) continue;
+        if (parentId == uncategorizedId || userFolderIds.contains(parentId)) {
+          userFiles.add(file);
+        }
+      }
+
+      final totalLocalCount = _hiveService.fileBox.length + 
+                             _hiveService.noteBox.length + 
+                             _hiveService.folderBox.length;
+
+      final finalCount = userFolderIds.length + userFiles.length;
+
+      // Debug Logs (Requirement 7)
+      debugPrint('Local items: $totalLocalCount');
+      debugPrint('Cloud items: $finalCount');
+      final List<String> itemNames = [];
+      for (final folderId in userFolderIds) {
+        final folder = allFolders.firstWhereOrNull((f) => f.id == folderId);
+        if (folder != null) {
+          itemNames.add('Folder: ${folder.name} (${folder.id})');
+        }
+      }
+      for (final file in userFiles) {
+        itemNames.add('File: ${file.name} (${file.id})');
+      }
+      debugPrint('Cloud item names:\n${itemNames.join('\n')}');
+      debugPrint('Final driveFiles count: $finalCount');
+
+      return finalCount;
+    } catch (e) {
+      debugPrint('[DriveSync] Error getting cloud item count: $e');
+      return 0;
+    }
   }
 
   String _escapeQuery(String value) => value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");

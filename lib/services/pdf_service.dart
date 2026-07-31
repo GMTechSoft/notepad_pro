@@ -163,12 +163,15 @@ class PdfService {
         referenceDetail = '$title at ${h}h ${m}m ${s}s';
       } else if (item.referenceType == ReferenceType.book) {
         List<String> parts = [];
-        if (item.bookName != null && item.bookName!.isNotEmpty)
+        if (item.bookName != null && item.bookName!.isNotEmpty) {
           parts.add(item.bookName!);
-        if (item.authorName != null && item.authorName!.isNotEmpty)
+        }
+        if (item.authorName != null && item.authorName!.isNotEmpty) {
           parts.add('by ${item.authorName}');
-        if (item.volume != null && item.volume!.isNotEmpty)
+        }
+        if (item.volume != null && item.volume!.isNotEmpty) {
           parts.add('Vol: ${item.volume}');
+        }
         if (item.pageNumber != null) parts.add('Page: ${item.pageNumber}');
         if (item.lineNumber != null) parts.add('Line: ${item.lineNumber}');
         referenceDetail = parts.isEmpty ? "N/A" : parts.join(', ');

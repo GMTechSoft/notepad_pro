@@ -59,7 +59,7 @@ class VaultSearchDelegate extends SearchDelegate<String> {
                 query: query,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(result.file.description ?? ''),
+              subtitle: Text(result.file.description),
               onTap: () {
                 close(context, query);
                 context.push('/read-note', extra: {

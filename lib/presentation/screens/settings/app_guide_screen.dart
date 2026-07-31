@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/data/app_content/app_guide_data.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class AppGuideScreen extends StatefulWidget {
   const AppGuideScreen({super.key});
@@ -13,9 +14,9 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F0FF),
+        backgroundColor: context.scaffoldBg,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(children: [
@@ -25,18 +26,18 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
             child: Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                color: const Color(0xFFEDE9F8),
+                color: context.highlightBg,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.arrow_back,
-                size: 14, color: Color(0xFF6C5CE7)),
+              child: Icon(Icons.arrow_back,
+                size: 14, color: context.primaryColor),
             ),
           ),
           const SizedBox(width: 8),
-          const Text(AppGuideData.pageTitle,
+          Text(AppGuideData.pageTitle,
             style: TextStyle(fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF2D2540))),
+              color: context.primaryText)),
         ]),
       ),
       body: LayoutBuilder(
@@ -98,10 +99,10 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF2D2540)
+        color: context.primaryText
       ),
     );
   }
@@ -110,11 +111,11 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF6C5CE7),
+        color: context.primaryColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+            color: context.primaryColor.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           )
@@ -196,9 +197,9 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 1),
+        border: Border.all(color: context.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,21 +211,21 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F0FF),
+                  color: context.highlightBg,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(step.icon, color: const Color(0xFF6C5CE7), size: 20),
+                child: Icon(step.icon, color: context.primaryColor, size: 20),
               ),
-              Text("Step $index", style: const TextStyle(color: Color(0xFF9B8DB8), fontSize: 12, fontWeight: FontWeight.bold)),
+              Text("Step $index", style: TextStyle(color: context.subText, fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(step.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2D2540))),
+              Text(step.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.primaryText)),
               const SizedBox(height: 4),
-              Text(step.description, style: const TextStyle(fontSize: 12, color: Color(0xFF6D6380))),
+              Text(step.description, style: TextStyle(fontSize: 12, color: context.subText)),
             ],
           ),
         ],
@@ -233,12 +234,16 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
   }
 
   Widget _buildFeatureGuideCard(FeatureGuideItem item) {
+    final tipBg = context.isDark ? const Color(0xFF422E1A) : const Color(0xFFFFF3E0);
+    final tipBorder = context.isDark ? const Color(0xFF634A2F) : const Color(0xFFFFE082);
+    final tipText = context.isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 1),
+        border: Border.all(color: context.border, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -254,17 +259,17 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
           Container(
             height: 180,
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEDE9F8),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            decoration: BoxDecoration(
+              color: context.highlightBg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            child: const Center(
+            child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.image_outlined, color: Color(0xFF9B8DB8), size: 40),
-                  SizedBox(height: 8),
-                  Text("[ Screenshot Placeholder ]", style: TextStyle(color: Color(0xFF9B8DB8), fontSize: 12, fontWeight: FontWeight.w500)),
+                  Icon(Icons.image_outlined, color: context.subText, size: 40),
+                  const SizedBox(height: 8),
+                  Text("[ Screenshot Placeholder ]", style: TextStyle(color: context.subText, fontSize: 12, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -276,31 +281,31 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(item.icon, color: const Color(0xFF6C5CE7), size: 24),
+                    Icon(item.icon, color: context.primaryColor, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(item.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D2540))),
+                      child: Text(item.title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.primaryText)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(item.explanation, style: const TextStyle(fontSize: 14, color: Color(0xFF6D6380), height: 1.6)),
+                Text(item.explanation, style: TextStyle(fontSize: 14, color: context.subText, height: 1.6)),
                 if (item.tip != null) ...[
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
+                      color: tipBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFFE082), width: 0.5),
+                      border: Border.all(color: tipBorder, width: 0.5),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFE65100)),
+                        Icon(Icons.lightbulb_outline, size: 18, color: tipText),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(item.tip!, style: const TextStyle(fontSize: 13, color: Color(0xFFE65100), height: 1.4)),
+                          child: Text(item.tip!, style: TextStyle(fontSize: 13, color: tipText, height: 1.4)),
                         ),
                       ],
                     ),
@@ -322,16 +327,16 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE0D9F5), width: 1),
+            border: Border.all(color: context.border, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(item.icon, size: 16, color: const Color(0xFF6C5CE7)),
+              Icon(item.icon, size: 16, color: context.primaryColor),
               const SizedBox(width: 8),
-              Text(item.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
+              Text(item.title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText)),
             ],
           ),
         )
@@ -340,12 +345,17 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
   }
 
   Widget _buildTips() {
+    final tipsBg = context.isDark ? const Color(0xFF0D2535) : const Color(0xFFF0FAFF);
+    final tipsBorder = context.isDark ? const Color(0xFF1E40AF) : const Color(0xFFBAE6FD);
+    final tipsIconColor = context.isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
+    final tipsTextColor = context.isDark ? const Color(0xFFE0F2FE) : const Color(0xFF0C4A6E);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FAFF),
+        color: tipsBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFBAE6FD), width: 1),
+        border: Border.all(color: tipsBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,9 +365,9 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.check_circle, size: 18, color: Color(0xFF0284C7)),
+                Icon(Icons.check_circle, size: 18, color: tipsIconColor),
                 const SizedBox(width: 12),
-                Expanded(child: Text(tip, style: const TextStyle(fontSize: 14, color: Color(0xFF0C4A6E), height: 1.4))),
+                Expanded(child: Text(tip, style: TextStyle(fontSize: 14, color: tipsTextColor, height: 1.4))),
               ],
             ),
           )
@@ -369,24 +379,24 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
   Widget _buildExpandableList(List<ExpandableItem> items) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 1),
+        border: Border.all(color: context.border, width: 1),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF5F0FF)),
+        separatorBuilder: (context, index) => Divider(height: 1, color: context.border),
         itemBuilder: (context, index) {
           return ExpansionTile(
-            title: Text(items[index].title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
-            iconColor: const Color(0xFF6C5CE7),
-            collapsedIconColor: const Color(0xFF9B8DB8),
+            title: Text(items[index].title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: context.primaryText)),
+            iconColor: context.primaryColor,
+            collapsedIconColor: context.subText,
             shape: const Border(),
             childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             children: [
-              Text(items[index].content, style: const TextStyle(fontSize: 13, color: Color(0xFF6D6380), height: 1.5)),
+              Text(items[index].content, style: TextStyle(fontSize: 13, color: context.subText, height: 1.5)),
             ],
           );
         },
@@ -398,9 +408,9 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 1),
+        border: Border.all(color: context.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,13 +420,13 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6C5CE7),
+                  color: context.primaryColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(AppGuideData.whatsNew.version, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 12),
-              Text(AppGuideData.whatsNew.releaseName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D2540))),
+              Text(AppGuideData.whatsNew.releaseName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryText)),
             ],
           ),
           const SizedBox(height: 16),
@@ -427,11 +437,11 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
                 children: [
                   const Icon(Icons.star, size: 14, color: Color(0xFFF59E0B)),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(feature, style: const TextStyle(fontSize: 14, color: Color(0xFF6D6380)))),
+                  Expanded(child: Text(feature, style: TextStyle(fontSize: 14, color: context.subText))),
                 ],
               ),
             )
-          ), // Fixed missing toList()
+          ),
         ],
       ),
     );
@@ -441,7 +451,7 @@ class _AppGuideScreenState extends State<AppGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2540),
+        color: context.isDark ? const Color(0xFF252033) : const Color(0xFF2D2540),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

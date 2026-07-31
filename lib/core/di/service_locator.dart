@@ -2,7 +2,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../services/connectivity_service.dart';
-import '../../presentation/blocs/theme/theme_cubit.dart'; // Import ThemeCubit
 import '../../presentation/blocs/selection/selection_cubit.dart';
 import '../../services/hive_service.dart'; // Import HiveService
 import '../../data/repositories/vault_repository_interface.dart'; // Import IVaultRepository
@@ -45,10 +44,7 @@ Future<void> setupServiceLocator({
     () => ConnectivityService(),
   );
 
-  // Register ThemeCubit
-  sl.registerLazySingleton<ThemeCubit>(
-    () => ThemeCubit(sl()), // Inject HiveService
-  );
+
 
   // Register AuthService
   sl.registerLazySingleton<AuthService>(

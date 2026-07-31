@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:io'; // Import for Directory
@@ -42,11 +42,11 @@ void main() {
     await sl.reset();
   });
 
-  testWidgets('App starts with "Notepad Pro" text', (WidgetTester tester) async {
+  testWidgets('App starts with "NotePilot" text', (WidgetTester tester) async {
     await tester.pumpWidget(const App());
     await tester.pumpAndSettle(); // Allow initial screen to render
 
-    expect(find.text('Notepad Pro'), findsOneWidget);
+    expect(find.text('NotePilot'), findsOneWidget);
 
     // Advance the clock to allow the Future.delayed in AppStartupScreen to complete
     await tester.pump(const Duration(seconds: 3));

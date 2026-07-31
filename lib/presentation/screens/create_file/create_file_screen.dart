@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-
 import 'package:uuid/uuid.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class CreateFileScreen extends StatefulWidget {
   final String? folderId;
@@ -21,24 +19,15 @@ class CreateFileScreen extends StatefulWidget {
 }
 
 class _CreateFileScreenState extends State<CreateFileScreen> {
-
   bool _hasCreatedAuto = false; // tracks if auto-save created a new file
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-bool _isSaving = false; // guard against concurrent saves
-late final String _stableFileId; // stable ID for this session
-late final AppLifecycleListener _lifecycleListener; // listener for app lifecycle events
-// Missing fields restored
+  bool _isSaving = false; // guard against concurrent saves
+  late final String _stableFileId; // stable ID for this session
+  late final AppLifecycleListener _lifecycleListener; // listener for app lifecycle events
+
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
-  String _title = '';
-  String _description = '';
 
-  final TextEditingController _titleCtrl = TextEditingController();
-  final TextEditingController _descCtrl = TextEditingController();
-  bool _isTitleUrdu = false;
-  bool _isDescUrdu = false;
-  bool _showReference = false;
   bool _addReference = false;
   late ReferenceType _referenceType;
   late String _videoTitle;
@@ -113,20 +102,16 @@ late final AppLifecycleListener _lifecycleListener; // listener for app lifecycl
     });
   }
 
-  // ---------------------------------------------------------------------
-  // Auto‑save handling
-  // ---------------------------------------------------------------------
-
-
   /// Unified save method used by both auto‑save and manual save actions.
-Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
-  // Do nothing if both title and description are empty.
-  if (_titleController.text.trim().isEmpty && _descriptionController.text.trim().isEmpty) return;
+  Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
+    // Do nothing if both title and description are empty.
+    if (_titleController.text.trim().isEmpty && _descriptionController.text.trim().isEmpty) return;
 
     // Guard against concurrent saves.
-  if (_isSaving) return;
-  _isSaving = true;
-  // Build the VaultFile instance with all current field values.
+    if (_isSaving) return;
+    _isSaving = true;
+
+    // Build the VaultFile instance with all current field values.
     final finalFile = VaultFile(
       id: widget.initialFile?.id ?? _stableFileId,
       folderId: widget.initialFile?.folderId ?? widget.folderId,
@@ -134,68 +119,67 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
       description: _descriptionController.text,
       createdAt: widget.initialFile?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
-    referenceType: _addReference ? _referenceType : ReferenceType.none,
-    videoTitle: _addReference && _referenceType == ReferenceType.video ? _videoTitle : null,
-    videoRefHours: _addReference && _referenceType == ReferenceType.video ? _videoHours : null,
-    videoRefMinutes: _addReference && _referenceType == ReferenceType.video ? _videoMinutes : null,
-    videoRefSeconds: _addReference && _referenceType == ReferenceType.video ? _videoSeconds : null,
-    bookName: _addReference && _referenceType == ReferenceType.book ? _bookTitleController.text : null,
-    authorName: _addReference && _referenceType == ReferenceType.book ? _authorName : null,
-    volume: _addReference && _referenceType == ReferenceType.book ? (_volumeCtrl.text.isEmpty ? null : _volumeCtrl.text) : null,
-    pageNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_pageCtrl.text) ?? 1 : null,
-    lineNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_lineCtrl.text) : null
-  );
+      referenceType: _addReference ? _referenceType : ReferenceType.none,
+      videoTitle: _addReference && _referenceType == ReferenceType.video ? _videoTitle : null,
+      videoRefHours: _addReference && _referenceType == ReferenceType.video ? _videoHours : null,
+      videoRefMinutes: _addReference && _referenceType == ReferenceType.video ? _videoMinutes : null,
+      videoRefSeconds: _addReference && _referenceType == ReferenceType.video ? _videoSeconds : null,
+      bookName: _addReference && _referenceType == ReferenceType.book ? _bookTitleController.text : null,
+      authorName: _addReference && _referenceType == ReferenceType.book ? _authorName : null,
+      volume: _addReference && _referenceType == ReferenceType.book ? (_volumeCtrl.text.isEmpty ? null : _volumeCtrl.text) : null,
+      pageNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_pageCtrl.text) ?? 1 : null,
+      lineNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_lineCtrl.text) : null,
+    );
 
-  try {
-    if (widget.initialFile == null && !_hasCreatedAuto) {
-      // New file – use createFile to insert into local DB.
-      await context.read<FilesCubit>().createFile(
-        folderId: widget.folderId,
-        title: finalFile.title,
-        description: finalFile.description,
-        referenceType: finalFile.referenceType,
-        videoTitle: finalFile.videoTitle,
-        videoRefHours: finalFile.videoRefHours,
-        videoRefMinutes: finalFile.videoRefMinutes,
-        videoRefSeconds: finalFile.videoRefSeconds,
-        bookName: finalFile.bookName,
-        authorName: finalFile.authorName,
-        volume: finalFile.volume,
-        pageNumber: finalFile.pageNumber,
-        lineNumber: finalFile.lineNumber,
-      );
-      _hasCreatedAuto = true; // mark creation done.
-    } else {
-      // Existing or already created file – update.
-      await context.read<FilesCubit>().updateFile(finalFile);
-    }
+    try {
+      if (widget.initialFile == null && !_hasCreatedAuto) {
+        // New file – use createFile to insert into local DB.
+        await context.read<FilesCubit>().createFile(
+          folderId: widget.folderId,
+          title: finalFile.title,
+          description: finalFile.description,
+          referenceType: finalFile.referenceType,
+          videoTitle: finalFile.videoTitle,
+          videoRefHours: finalFile.videoRefHours,
+          videoRefMinutes: finalFile.videoRefMinutes,
+          videoRefSeconds: finalFile.videoRefSeconds,
+          bookName: finalFile.bookName,
+          authorName: finalFile.authorName,
+          volume: finalFile.volume,
+          pageNumber: finalFile.pageNumber,
+          lineNumber: finalFile.lineNumber,
+        );
+        _hasCreatedAuto = true; // mark creation done.
+      } else {
+        // Existing or already created file – update.
+        await context.read<FilesCubit>().updateFile(finalFile);
+      }
 
       // If auto‑sync is enabled and this is a manual save, trigger a single file upload to Google Drive.
       final configBox = Hive.box('settings');
       final bool isAutoSyncEnabled = (configBox.get('auto_sync', defaultValue: false) as bool);
-      if (isAutoSyncEnabled) {
+      if (isAutoSyncEnabled && mounted) {
         await context.read<SyncCubit>().syncNow();
       }
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Log any error – keep UI responsive.
-      print('Database or Cloud pipeline handling error: $error');
-      print(stackTrace);
+      debugPrint('Database or Cloud pipeline handling error: $error');
     } finally {
-    // Reset saving guard.
-    _isSaving = false;
-    // If this was an explicit manual save, navigate back.
-    if (isManualSave && mounted) {
-      Navigator.pop(context);
+      // Reset saving guard.
+      _isSaving = false;
+      // If this was an explicit manual save, navigate back.
+      if (isManualSave && mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
-}
 
   @override
   void dispose() {
     // Dispose lifecycle listener
     _lifecycleListener.dispose();
 
-    // Force a final synchronous save to ensure all data is persisted and synced
+    // Force a final save to ensure all data is persisted and synced
     _performSecureSaveAndSync(isManualSave: false);
 
     // Dispose controllers and focus nodes
@@ -220,303 +204,202 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
     return urduRegex.hasMatch(text);
   }
 
-  Future<void> _saveFile() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      setState(() => _isLoading = true);
-      try {
-        final currentTitle = _titleController.text;
-        final currentBookName = _bookTitleController.text;
-
-        final String? volume =
-            _volumeCtrl.text.isEmpty ? null : _volumeCtrl.text;
-        final int page = int.tryParse(_pageCtrl.text) ?? 1;
-        final int? line =
-            _lineCtrl.text.isEmpty ? null : int.tryParse(_lineCtrl.text);
-
-        final int vHours = int.tryParse(_hourCtrl.text) ?? 0;
-        final int vMinutes = int.tryParse(_minCtrl.text) ?? 0;
-        final int vSeconds = int.tryParse(_secCtrl.text) ?? 0;
-
-        if (widget.initialFile != null) {
-          final updatedFile = widget.initialFile!.copyWith(
-            title: currentTitle,
-            description: _description,
-            referenceType: _addReference ? _referenceType : ReferenceType.none,
-            videoTitle: _addReference && _referenceType == ReferenceType.video
-                ? _videoTitle
-                : null,
-            videoRefHours:
-                _addReference && _referenceType == ReferenceType.video
-                    ? vHours
-                    : null,
-            videoRefMinutes:
-                _addReference && _referenceType == ReferenceType.video
-                    ? vMinutes
-                    : null,
-            videoRefSeconds:
-                _addReference && _referenceType == ReferenceType.video
-                    ? vSeconds
-                    : null,
-            bookName: _addReference && _referenceType == ReferenceType.book
-                ? currentBookName
-                : null,
-            authorName: _addReference && _referenceType == ReferenceType.book
-                ? _authorName
-                : null,
-            volume: _addReference && _referenceType == ReferenceType.book
-                ? volume
-                : null,
-            pageNumber: _addReference && _referenceType == ReferenceType.book
-                ? page
-                : null,
-            lineNumber: _addReference && _referenceType == ReferenceType.book
-                ? line
-                : null,
-            updatedAt: DateTime.now(),
-          );
-          await context.read<FilesCubit>().updateFile(updatedFile);
-        } else {
-          await context.read<FilesCubit>().createFile(
-                folderId: widget.folderId,
-                title: currentTitle,
-                description: _description,
-                referenceType:
-                    _addReference ? _referenceType : ReferenceType.none,
-                videoTitle:
-                    _addReference && _referenceType == ReferenceType.video
-                        ? _videoTitle
-                        : null,
-                videoRefHours:
-                    _addReference && _referenceType == ReferenceType.video
-                        ? vHours
-                        : null,
-                videoRefMinutes:
-                    _addReference && _referenceType == ReferenceType.video
-                        ? vMinutes
-                        : null,
-                videoRefSeconds:
-                    _addReference && _referenceType == ReferenceType.video
-                        ? vSeconds
-                        : null,
-                bookName: _addReference && _referenceType == ReferenceType.book
-                    ? currentBookName
-                    : null,
-                authorName:
-                    _addReference && _referenceType == ReferenceType.book
-                        ? _authorName
-                        : null,
-                volume: _addReference && _referenceType == ReferenceType.book
-                    ? volume
-                    : null,
-                pageNumber:
-                    _addReference && _referenceType == ReferenceType.book
-                        ? page
-                        : null,
-                lineNumber:
-                    _addReference && _referenceType == ReferenceType.book
-                        ? line
-                        : null,
-              );
-        }
-        if (mounted) context.pop(true);
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, dynamic result) async {
+        if (didPop) return;
         await _performSecureSaveAndSync(isManualSave: false);
-        return true;
+        if (mounted) {
+          Navigator.of(this.context).pop(result);
+        }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F0FF),
-      appBar: _buildAppBar(context),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          children: [
-            const SizedBox(height: 10),
-            _buildFieldLabel("File title *"),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-              child: TextFormField(
-                controller: _titleController,
-                maxLines: null,
-                minLines: 1,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                textDirection: _isUrdu(_titleController.text)
-                    ? TextDirection.rtl
-                    : TextDirection.ltr,
-                textAlign: _isUrdu(_titleController.text)
-                    ? TextAlign.right
-                    : TextAlign.left,
-                onChanged: (val) => setState(() {}),
-                validator: (val) => (val?.isEmpty ?? true) ? 'Required' : null,
-                decoration: const InputDecoration(
-                  hintText: 'File ka naam likhein...',
-                  hintStyle: TextStyle(color: Color(0xFFB0A0CC), fontSize: 13),
-                  border: InputBorder.none,
-                  isDense: true,
+        backgroundColor: context.scaffoldBg,
+        appBar: _buildAppBar(context),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            children: [
+              const SizedBox(height: 10),
+              _buildFieldLabel("File title *"),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.cardBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: context.border, width: 0.5),
                 ),
-                style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildFieldLabel("Description"),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-              child: TextFormField(
-                controller: _descriptionController,
-                maxLines: null,
-                minLines: 1,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                textDirection: _isUrdu(_descriptionController.text) ? TextDirection.rtl : TextDirection.ltr,
-                textAlign: _isUrdu(_descriptionController.text) ? TextAlign.right : TextAlign.left,
-                onChanged: (val) => setState(() {}),
-                validator: (val) => null,
-                decoration: const InputDecoration(
-                  hintText: "Apni notes yahan likhein...",
-                  hintStyle: TextStyle(color: Color(0xFFB0A0CC), fontSize: 13),
-                  border: InputBorder.none,
-                  isDense: true,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                child: TextFormField(
+                  controller: _titleController,
+                  cursorColor: context.primaryColor,
+                  maxLines: null,
+                  minLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textDirection: _isUrdu(_titleController.text)
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  textAlign: _isUrdu(_titleController.text)
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  onChanged: (val) => setState(() {}),
+                  validator: (val) => (val?.isEmpty ?? true) ? 'Required' : null,
+                  decoration: InputDecoration(
+                    hintText: 'Enter file name...',
+                    hintStyle: TextStyle(color: context.subText, fontSize: 13),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: TextStyle(fontSize: 13, color: context.primaryText),
                 ),
-                style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(color: Color(0xFFE8E2F5), thickness: 0.5),
-            const SizedBox(height: 16),
-
-            // Reference Toggle Card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Reference add karein",
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF2D2540)),
-                        ),
-                        const Text(
-                          "Book ya video link karein (optional)",
-                          style:
-                              TextStyle(fontSize: 10, color: Color(0xFF9B8DB8)),
-                        ),
-                      ],
-                    ),
+              const SizedBox(height: 10),
+              _buildFieldLabel("Description"),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.cardBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: context.border, width: 0.5),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                child: TextFormField(
+                  controller: _descriptionController,
+                  cursorColor: context.primaryColor,
+                  maxLines: null,
+                  minLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textDirection: _isUrdu(_descriptionController.text) ? TextDirection.rtl : TextDirection.ltr,
+                  textAlign: _isUrdu(_descriptionController.text) ? TextAlign.right : TextAlign.left,
+                  onChanged: (val) => setState(() {}),
+                  validator: (val) => null,
+                  decoration: InputDecoration(
+                    hintText: "Write your notes here...",
+                    hintStyle: TextStyle(color: context.subText, fontSize: 13),
+                    border: InputBorder.none,
+                    isDense: true,
                   ),
-                  Switch(
-                    value: _addReference,
-                    onChanged: (val) => setState(() => _addReference = val),
-                    activeColor: Colors.white,
-                    activeTrackColor: const Color(0xFF6C5CE7),
-                  ),
-                ],
+                  style: TextStyle(fontSize: 13, color: context.primaryText),
+                ),
               ),
-            ),
-
-            if (_addReference) ...[
               const SizedBox(height: 16),
-              // Fix A — Segmented Control with better padding
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(9),
-                  border:
-                      Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
-                ),
-                padding: const EdgeInsets.all(3),
-                child: Row(children: [
-                  _buildTab(
-                    icon: Icons.play_circle_outline,
-                    label: "Video",
-                    isActive: _referenceType == ReferenceType.video,
-                    onTap: () =>
-                        setState(() => _referenceType = ReferenceType.video),
-                  ),
-                  _buildTab(
-                    icon: Icons.menu_book_outlined,
-                    label: "Book",
-                    isActive: _referenceType == ReferenceType.book,
-                    onTap: () =>
-                        setState(() => _referenceType = ReferenceType.book),
-                  ),
-                ]),
-              ),
-              const SizedBox(height: 20),
+              Divider(color: context.border, thickness: 0.5),
+              const SizedBox(height: 16),
 
-              // Reference Details
-              if (_referenceType == ReferenceType.book) _buildBookSection(),
-              if (_referenceType == ReferenceType.video) _buildVideoSection(),
-
-              const SizedBox(height: 20),
-              // Info Pill
+              // Reference Toggle Card
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9F8),
-                  borderRadius: BorderRadius.circular(8),
+                  color: context.cardBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: context.border, width: 0.5),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline,
-                        size: 16, color: Color(0xFF6C5CE7)),
-                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        _referenceType == ReferenceType.video
-                            ? "Timestamp se directly us waqt pe jump kar sakte hain"
-                            : "Reference save hone ke baad search mein dikh sakta hai",
-                        style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF534AB7)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Add reference",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: context.primaryText,
+                            ),
+                          ),
+                          Text(
+                            "Link book or video (optional)",
+                            style: TextStyle(fontSize: 10, color: context.subText),
+                          ),
+                        ],
                       ),
+                    ),
+                    Switch(
+                      value: _addReference,
+                      onChanged: (val) => setState(() => _addReference = val),
+                      activeThumbColor: context.isDark ? Colors.black : Colors.white,
+                      activeTrackColor: context.primaryColor,
                     ),
                   ],
                 ),
               ),
+
+              if (_addReference) ...[
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.cardBg,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(color: context.border, width: 0.5),
+                  ),
+                  padding: const EdgeInsets.all(3),
+                  child: Row(children: [
+                    _buildTab(
+                      icon: Icons.play_circle_outline,
+                      label: "Video",
+                      isActive: _referenceType == ReferenceType.video,
+                      onTap: () =>
+                          setState(() => _referenceType = ReferenceType.video),
+                    ),
+                    _buildTab(
+                      icon: Icons.menu_book_outlined,
+                      label: "Book",
+                      isActive: _referenceType == ReferenceType.book,
+                      onTap: () =>
+                          setState(() => _referenceType = ReferenceType.book),
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 20),
+
+                // Reference Details
+                if (_referenceType == ReferenceType.book) _buildBookSection(),
+                if (_referenceType == ReferenceType.video) _buildVideoSection(),
+
+                const SizedBox(height: 20),
+                // Info Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: context.highlightBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: context.primaryColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _referenceType == ReferenceType.video
+                              ? "Jump directly to that time using timestamp"
+                              : "References will appear in search after saving",
+                          style: TextStyle(
+                            fontSize: 11, 
+                            color: context.isDark ? const Color(0xFFBBADFF) : const Color(0xFF534AB7),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 30),
             ],
-            const SizedBox(height: 30),
-          ],
+          ),
         ),
       ),
-    ));
+    );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     final bool isSaveDisabled = _titleController.text.trim().isEmpty;
 
     return AppBar(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: context.scaffoldBg,
       elevation: 0,
       automaticallyImplyLeading: false,
       title: Row(
@@ -526,28 +409,32 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
             onPressed: () => context.pop(),
           ),
           const Spacer(),
-          const Text(
+          Text(
             "Create new file",
             style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF2D2540)),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: context.primaryText,
+            ),
           ),
           const Spacer(),
           ElevatedButton.icon(
-            onPressed: (isSaveDisabled || _isLoading) ? null : () async => await _performSecureSaveAndSync(isManualSave: true),
-            icon: _isLoading
-                ? const SizedBox(
+            onPressed: (isSaveDisabled || _isSaving) ? null : () async => await _performSecureSaveAndSync(isManualSave: true),
+            icon: _isSaving
+                ? SizedBox(
                     width: 12,
                     height: 12,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.save, size: 14, color: Colors.white),
-            label: const Text("Save",
-                style: TextStyle(color: Colors.white, fontSize: 12)),
+                      strokeWidth: 2, 
+                      valueColor: AlwaysStoppedAnimation(context.isDark ? Colors.black : Colors.white),
+                    ),
+                  )
+                : Icon(Icons.save, size: 14, color: context.isDark ? Colors.black : Colors.white),
+            label: Text("Save",
+                style: TextStyle(color: context.isDark ? Colors.black : Colors.white, fontSize: 12)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C5CE7),
-              disabledBackgroundColor: Colors.grey.shade400,
+              backgroundColor: context.primaryColor,
+              disabledBackgroundColor: context.isDark ? Colors.grey.shade800 : Colors.grey.shade400,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               shape: RoundedRectangleBorder(
@@ -559,8 +446,7 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
     );
   }
 
-  Widget _buildCircleButton(
-      {required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildCircleButton({required IconData icon, required VoidCallback onPressed}) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(9),
@@ -568,10 +454,10 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: const Color(0xFFEDE9F8),
+          color: context.highlightBg,
           borderRadius: BorderRadius.circular(9),
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFF6C5CE7)),
+        child: Icon(icon, size: 18, color: context.primaryColor),
       ),
     );
   }
@@ -581,10 +467,11 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
       padding: const EdgeInsets.only(bottom: 4, top: 10),
       child: Text(
         label,
-        style: const TextStyle(
-            fontSize: 11,
-            color: Color(0xFF9B8DB8),
-            fontWeight: FontWeight.w500),
+        style: TextStyle(
+          fontSize: 11,
+          color: context.subText,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -603,9 +490,9 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
       constraints:
           minHeight != null ? BoxConstraints(minHeight: minHeight) : null,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+        border: Border.all(color: context.border, width: 0.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: TextFormField(
@@ -615,13 +502,14 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
         validator: validator,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        cursorColor: context.primaryColor,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFB0A0CC), fontSize: 13),
+          hintStyle: TextStyle(color: context.subText, fontSize: 13),
           border: InputBorder.none,
           isDense: true,
         ),
-        style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
+        style: TextStyle(fontSize: 13, color: context.primaryText),
       ),
     );
   }
@@ -638,22 +526,24 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF6C5CE7) : Colors.transparent,
+            color: isActive ? context.primaryColor : Colors.transparent,
             borderRadius: BorderRadius.circular(7),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: 13,
-                  color: isActive ? Colors.white : const Color(0xFF9B8DB8)),
+              Icon(
+                icon,
+                size: 13,
+                color: isActive ? (context.isDark ? Colors.black : Colors.white) : context.subText,
+              ),
               const SizedBox(width: 5),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isActive ? Colors.white : const Color(0xFF9B8DB8),
+                  color: isActive ? (context.isDark ? Colors.black : Colors.white) : context.subText,
                 ),
               ),
             ],
@@ -668,17 +558,18 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(Icons.book_outlined, "Book reference",
-            color: const Color(0xFF6C5CE7), bgColor: const Color(0xFFEDE9F8)),
-        _buildFieldLabel("Book ka naam *"),
+            color: context.primaryColor, bgColor: context.highlightBg),
+        _buildFieldLabel("Book Title *"),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardBg,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+            border: Border.all(color: context.border, width: 0.5),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           child: TextFormField(
             controller: _bookTitleController,
+            cursorColor: context.primaryColor,
             maxLines: null,
             minLines: 1,
             keyboardType: TextInputType.multiline,
@@ -688,13 +579,13 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                     (val?.isEmpty ?? true))
                 ? 'Required'
                 : null,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'e.g. Aab-e-Hayat',
-              hintStyle: TextStyle(color: Color(0xFFB0A0CC), fontSize: 13),
+              hintStyle: TextStyle(color: context.subText, fontSize: 13),
               border: InputBorder.none,
               isDense: true,
             ),
-            style: const TextStyle(fontSize: 13, color: Color(0xFF2D2540)),
+            style: TextStyle(fontSize: 13, color: context.primaryText),
           ),
         ),
         const SizedBox(height: 16),
@@ -702,11 +593,11 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Section label
-            const Text("Volume / Page / Line",
+            Text("Volume / Page / Line",
                 style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF9B8DB8))),
+                    color: context.subText)),
             const SizedBox(height: 6),
             // 3 boxes in a row
             Row(children: [
@@ -743,7 +634,7 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
           ],
         ),
         const SizedBox(height: 10),
-        _buildFieldLabel("Musannif (Author)"),
+        _buildFieldLabel("Author"),
         _buildTextField(
           hint: "e.g. Umera Ahmed",
           initialValue: _authorName,
@@ -754,11 +645,14 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
   }
 
   Widget _buildVideoSection() {
+    final videoColor = context.isDark ? const Color(0xFFEF5350) : const Color(0xFFC0392B);
+    final videoBg = context.isDark ? const Color(0xFF3C201E) : const Color(0xFFFDECEA);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(Icons.play_circle_outline, "Video reference",
-            color: const Color(0xFFC0392B), bgColor: const Color(0xFFFDECEA)),
+            color: videoColor, bgColor: videoBg),
         _buildFieldLabel("Video title *"),
         _buildTextField(
           hint: "e.g. Bayan No. 45 — Mufti Tariq...",
@@ -771,13 +665,13 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
               : null,
         ),
         const SizedBox(height: 16),
-        _buildFieldLabel("Timestamp — video ka waqt"),
+        _buildFieldLabel("Timestamp — video time"),
         Row(children: [
-          _tsBox("Ghante", "hours", _hourCtrl, 99),
+          _tsBox("Hours", "hours", _hourCtrl, 99),
           const SizedBox(width: 6),
-          _tsBox("Minute", "min", _minCtrl, 59),
+          _tsBox("Minutes", "min", _minCtrl, 59),
           const SizedBox(width: 6),
-          _tsBox("Second", "sec", _secCtrl, 59),
+          _tsBox("Seconds", "sec", _secCtrl, 59),
         ]),
       ],
     );
@@ -788,15 +682,15 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F0FF),
-          border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+          color: context.highlightBg,
+          border: Border.all(color: context.border, width: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(children: [
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 2),
             child: Text(label,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+                style: TextStyle(fontSize: 10, color: context.subText)),
           ),
           Row(children: [
             Expanded(
@@ -816,17 +710,17 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                 },
                 child: Container(
                   height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEDE9F8),
+                  decoration: BoxDecoration(
+                    color: context.highlightBg,
                     borderRadius:
-                        BorderRadius.only(bottomLeft: Radius.circular(9)),
+                        const BorderRadius.only(bottomLeft: Radius.circular(9)),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text("-",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF6C5CE7))),
+                            color: context.primaryColor)),
                   ),
                 ),
               ),
@@ -837,10 +731,10 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                 controller: controller,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D2540)),
+                    color: context.primaryText),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(2),
@@ -888,17 +782,17 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                 },
                 child: Container(
                   height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF6C5CE7),
+                  decoration: BoxDecoration(
+                    color: context.primaryColor,
                     borderRadius:
-                        BorderRadius.only(bottomRight: Radius.circular(9)),
+                        const BorderRadius.only(bottomRight: Radius.circular(9)),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text("+",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white)),
+                            color: context.isDark ? Colors.black : Colors.white)),
                   ),
                 ),
               ),
@@ -927,8 +821,8 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F0FF),
-        border: Border.all(color: const Color(0xFFE0D9F5), width: 0.5),
+        color: context.highlightBg,
+        border: Border.all(color: context.border, width: 0.5),
         borderRadius: BorderRadius.circular(10),
       ),
       clipBehavior: Clip.hardEdge,
@@ -937,16 +831,16 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
         Padding(
           padding: const EdgeInsets.only(top: 6, bottom: 4),
           child: Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF9B8DB8))),
+              style: TextStyle(fontSize: 10, color: context.subText)),
         ),
 
         // DIRECT TEXT INPUT — main feature
         Container(
-          color: Colors.white,
+          color: context.cardBg,
           child: TextField(
             controller: controller,
             focusNode: focusNode,
-
+            cursorColor: context.primaryColor,
             // Numeric keyboard
             keyboardType:
                 const TextInputType.numberWithOptions(signed: false, decimal: false),
@@ -958,25 +852,25 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
             ],
 
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF2D2540)),
+                color: context.primaryText),
 
             decoration: InputDecoration(
               hintText: isOptional ? '—' : '0',
-              hintStyle: const TextStyle(fontSize: 16, color: Color(0xFFB0A0CC)),
-              border: const OutlineInputBorder(
+              hintStyle: TextStyle(fontSize: 16, color: context.subText),
+              border: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Color(0xFFE0D9F5), width: 0.5),
+                      BorderSide(color: context.border, width: 0.5),
                   borderRadius: BorderRadius.zero),
-              enabledBorder: const OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Color(0xFFE0D9F5), width: 0.5),
+                      BorderSide(color: context.border, width: 0.5),
                   borderRadius: BorderRadius.zero),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Color(0xFF6C5CE7), width: 1),
+                      BorderSide(color: context.primaryColor, width: 1),
                   borderRadius: BorderRadius.zero),
               contentPadding: const EdgeInsets.symmetric(vertical: 8),
             ),
@@ -1009,14 +903,14 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                   behavior: HitTestBehavior.opaque,
                   onTap: () => _stepValue(controller, -1, min: minVal),
                   child: Container(
-                    color: const Color(0xFFEDE9F8),
+                    color: context.highlightBg,
                     height: 36,
-                    child: const Center(
+                    child: Center(
                       child: Text('−',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w300,
-                              color: Color(0xFF6C5CE7),
+                              color: context.primaryColor,
                               height: 1)),
                     ),
                   ),
@@ -1024,7 +918,7 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
               ),
 
               // Thin divider between buttons
-              Container(width: 0.5, color: const Color(0xFFE0D9F5)),
+              Container(width: 0.5, color: context.border),
 
               // PLUS button
               Expanded(
@@ -1032,14 +926,14 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
                   behavior: HitTestBehavior.opaque,
                   onTap: () => _stepValue(controller, 1, min: minVal),
                   child: Container(
-                    color: const Color(0xFF6C5CE7),
+                    color: context.primaryColor,
                     height: 36,
-                    child: const Center(
+                    child: Center(
                       child: Text('+',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w300,
-                              color: Colors.white,
+                              color: context.isDark ? Colors.black : Colors.white,
                               height: 1)),
                     ),
                   ),
@@ -1053,7 +947,7 @@ Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
         Padding(
           padding: const EdgeInsets.only(top: 3, bottom: 5),
           child: Text(unit,
-              style: const TextStyle(fontSize: 9, color: Color(0xFFB0A0CC))),
+              style: TextStyle(fontSize: 9, color: context.subText)),
         ),
       ]),
     );

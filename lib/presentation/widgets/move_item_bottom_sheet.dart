@@ -1,15 +1,13 @@
 import 'package:collection/collection.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 import '../../domain/entities/folder.dart' show Folder;
 import '../../domain/entities/vault_file.dart';
 import '../blocs/files/files_cubit.dart';
 import '../blocs/folders/folders_cubit.dart';
 import '../blocs/folders/folders_state.dart';
-// ... existing imports ...
-// Removed top-level breadcrumb helper; use the inner version within the widget.
 
 /// Shows a modal bottom sheet that lets the user move either a [Folder] or a [VaultFile]
 /// to a different parent folder. It re‑uses the existing [FoldersCubit] to load the
@@ -23,10 +21,11 @@ void showMoveItemBottomSheet(BuildContext context, {
   context.read<FoldersCubit>().loadFolders();
 
   final String? currentParentId = isFolder ? (item as Folder).parentId : (item as VaultFile).folderId;
+  String searchQuery = '';
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFFFAFAFF),
+    backgroundColor: context.scaffoldBg,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -34,7 +33,7 @@ void showMoveItemBottomSheet(BuildContext context, {
       return BlocBuilder<FoldersCubit, FoldersState>(
         builder: (context, state) {
           if (state is! FoldersLoadSuccess) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(context.primaryColor)));
           }
 
           // Exclude the folder itself when moving a folder.
@@ -44,7 +43,6 @@ void showMoveItemBottomSheet(BuildContext context, {
 
           return StatefulBuilder(
             builder: (BuildContext ctx, StateSetter setState) {
-              String searchQuery = '';
               // Helper to compute breadcrumb path
               String breadcrumb(Folder folder) {
                 List<String> parts = [];
@@ -66,6 +64,8 @@ void showMoveItemBottomSheet(BuildContext context, {
                 return query.isEmpty || nameMatch || pathMatch;
               }).toList();
 
+              final matchHighlightColor = context.isDark ? const Color(0xFF1B3D3C) : const Color(0xFFE0F7FA);
+
               return SafeArea(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -75,29 +75,31 @@ void showMoveItemBottomSheet(BuildContext context, {
                       margin: const EdgeInsets.only(top: 9, bottom: 8),
                       width: 32,
                       height: 4,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD0C8E8),
-                        borderRadius: BorderRadius.all(Radius.circular(2)),
+                      decoration: BoxDecoration(
+                        color: context.border,
+                        borderRadius: const BorderRadius.all(Radius.circular(2)),
                       ),
                     ),
-                    const Text(
+                    Text(
                       "SELECT TARGET FOLDER",
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF9B8DB8)),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: context.subText),
                     ),
                     const SizedBox(height: 8),
                     // Search field
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextField(
+                        style: TextStyle(color: context.primaryText, fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'Search folders',
-                          prefixIcon: const Icon(Icons.search, size: 20),
+                          hintStyle: TextStyle(color: context.subText, fontSize: 13),
+                          prefixIcon: Icon(Icons.search, size: 20, color: context.subText),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          fillColor: const Color(0xFFF0F0F0),
+                          fillColor: context.highlightBg,
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -109,12 +111,12 @@ void showMoveItemBottomSheet(BuildContext context, {
                     const SizedBox(height: 8),
                     // Root / Home option
                     ListTile(
-                      leading: const Icon(Icons.home_outlined, color: Color(0xFF6C5CE7)),
-                      title: const Text(
+                      leading: Icon(Icons.home_outlined, color: context.primaryColor),
+                      title: Text(
                         "Root / Home",
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.primaryText),
                       ),
-                      trailing: currentParentId == null ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                      trailing: currentParentId == null ? Icon(Icons.check, color: context.primaryColor) : null,
                       onTap: () {
                         if (isFolder) {
                           context.read<FoldersCubit>().moveFolder(folderId: item.id, targetParentId: null);
@@ -124,7 +126,7 @@ void showMoveItemBottomSheet(BuildContext context, {
                         Navigator.pop(ctx);
                       },
                     ),
-                    const Divider(height: 1, thickness: 0.5),
+                    Divider(height: 1, thickness: 0.5, color: context.border),
                     // Folder list
                     Expanded(
                       child: ListView.builder(
@@ -135,11 +137,11 @@ void showMoveItemBottomSheet(BuildContext context, {
                           final path = breadcrumb(folder);
                           final matches = searchQuery.isNotEmpty && (folder.name.toLowerCase().contains(searchQuery.toLowerCase()) || path.toLowerCase().contains(searchQuery.toLowerCase()));
                           return ListTile(
-                            tileColor: matches ? const Color(0xFFE0F7FA) : null,
-                            leading: const Icon(Icons.folder, color: Color(0xFF6C5CE7)),
-                            title: Text(folder.name, style: const TextStyle(fontSize: 13)),
-                            subtitle: path.isNotEmpty ? Text(path, style: const TextStyle(fontSize: 11, color: Colors.grey)) : null,
-                            trailing: isCurrentParent ? const Icon(Icons.check, color: Color(0xFF6C5CE7)) : null,
+                            tileColor: matches ? matchHighlightColor : null,
+                            leading: Icon(Icons.folder, color: context.primaryColor),
+                            title: Text(folder.name, style: TextStyle(fontSize: 13, color: context.primaryText)),
+                            subtitle: path.isNotEmpty ? Text(path, style: TextStyle(fontSize: 11, color: context.subText)) : null,
+                            trailing: isCurrentParent ? Icon(Icons.check, color: context.primaryColor) : null,
                             onTap: isCurrentParent
                                 ? null
                                 : () {
@@ -157,7 +159,7 @@ void showMoveItemBottomSheet(BuildContext context, {
                     const SizedBox(height: 12),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF6C5CE7))),
+                      child: Text('Cancel', style: TextStyle(color: context.primaryColor)),
                     ),
                   ],
                 ),

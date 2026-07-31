@@ -6,19 +6,21 @@ import 'package:notepad_pro/presentation/screens/home/widgets/create_bottom_shee
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 
 import 'vault_search_delegate.dart';
+
 class EmptyVaultView extends StatelessWidget {
   const EmptyVaultView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(context),
             Expanded(
-              child: _buildCenterContent(),
+              child: _buildCenterContent(context),
             ),
             _buildActionChips(context),
             _buildBottomButton(context),
@@ -29,6 +31,7 @@ class EmptyVaultView extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -37,22 +40,22 @@ class EmptyVaultView extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFF6C5CE7),
+              color: theme.colorScheme.primary,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.security_rounded,
-              color: Colors.white,
+              color: theme.colorScheme.onPrimary,
               size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'NotePilot App',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF2D2540),
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -61,35 +64,37 @@ class EmptyVaultView extends StatelessWidget {
               context: context,
               delegate: VaultSearchDelegate(),
             ),
-            child: _buildHeaderButton(Icons.search),
+            child: _buildHeaderButton(context, Icons.search),
           ),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () => context.push('/settings'),
-            child: _buildHeaderButton(Icons.settings_outlined),
+            child: _buildHeaderButton(context, Icons.settings_outlined),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderButton(IconData icon) {
+  Widget _buildHeaderButton(BuildContext context, IconData icon) {
+    final theme = Theme.of(context);
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: const Color(0xFFEDE9F8),
+        color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(
         icon,
-        color: const Color(0xFF6C5CE7),
+        color: theme.colorScheme.primary,
         size: 20,
       ),
     );
   }
 
-  Widget _buildCenterContent() {
+  Widget _buildCenterContent(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -97,33 +102,33 @@ class EmptyVaultView extends StatelessWidget {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: const Color(0xFFEDE9F8),
+            color: theme.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(28),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.book_outlined,
-            color: Color(0xFF6C5CE7),
+            color: theme.colorScheme.primary,
             size: 42,
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Your vault is empty',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF2D2540),
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 40),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
             'Create your first note or folder. Everything stays private, right here.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF9B8DB8),
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -160,24 +165,25 @@ class EmptyVaultView extends StatelessWidget {
   }
 
   Widget _buildChip(BuildContext context, String label, IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFD8D0F0), width: 0.5),
+          border: Border.all(color: theme.colorScheme.outline, width: 0.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: const Color(0xFF6C5CE7), size: 16),
+            Icon(icon, color: theme.colorScheme.primary, size: 16),
             const SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF6C5CE7),
+              style: TextStyle(
+                color: theme.colorScheme.primary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -189,6 +195,7 @@ class EmptyVaultView extends StatelessWidget {
   }
 
   Widget _buildBottomButton(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(20),
       child: GestureDetector(
@@ -197,26 +204,25 @@ class EmptyVaultView extends StatelessWidget {
           width: double.infinity,
           height: 56,
           decoration: BoxDecoration(
-            color: const Color(0xFF6C5CE7),
+            color: theme.colorScheme.primary,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6C5CE7).withValues(alpha: 0.2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
-
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add, color: Colors.white),
-              SizedBox(width: 8),
+              Icon(Icons.add, color: theme.colorScheme.onPrimary),
+              const SizedBox(width: 8),
               Text(
                 'Create new',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

@@ -13,9 +13,9 @@ import 'package:notepad_pro/presentation/widgets/app_logo.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/folders/folders_cubit.dart';
-import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/widgets/cards/file_card.dart';
 import 'package:notepad_pro/presentation/widgets/cards/folder_card.dart';
+import 'package:notepad_pro/core/theme/theme_extensions.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -77,6 +77,16 @@ class _HomeScreenView extends StatelessWidget {
                 return BlocBuilder<SelectionCubit, SelectionState>(
                   builder: (context, selectionState) {
                     final isSelecting = selectionState.isSelecting;
+                    // Clean up selection state if selected items are no longer visible/valid (e.g. deleted/moved/restored)
+                    final visibleIds = allItems.map((e) => (e as dynamic).id as String).toSet();
+                    final hasInvisibleSelected = selectionState.selectedIds.any((id) => !visibleIds.contains(id));
+                    if (hasInvisibleSelected) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (context.mounted) {
+                          context.read<SelectionCubit>().keepOnly(visibleIds.toList());
+                        }
+                      });
+                    }
 
                     if (allItems.isEmpty && !isSelecting) {
                       return const EmptyVaultView();
@@ -91,12 +101,12 @@ class _HomeScreenView extends StatelessWidget {
                         }
                       },
                       child: Scaffold(
-                      backgroundColor: const Color(0xFFF5F0FF),
+                      backgroundColor: context.scaffoldBg,
                       body: SafeArea(
                         child: Column(
                           children: [
                             if (isSelecting)
-                              _buildSelectionHeader(context, selectionState)
+                              _buildSelectionHeader(context, selectionState, allItems)
                             else
                               _buildDefaultHeader(context, rootFolders.length),
                             
@@ -128,9 +138,9 @@ class _HomeScreenView extends StatelessWidget {
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
                                     onPressed: () => showCreateBottomSheet(context),
-                                    icon: const Icon(Icons.add, color: Colors.white),
-                                    label: const Text('Create new', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
-                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C5CE7), padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
+                                    icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+                                    label: Text('Create new', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 15, fontWeight: FontWeight.w500)),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
                                   ),
                                 ),
                               )
@@ -158,46 +168,42 @@ class _HomeScreenView extends StatelessWidget {
         children: [
           const AppLogo(size: 18),
           const SizedBox(width: 8),
-          const Text('NotePilot App', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Color(0xFF2D2540))),
+          Text('NotePilot App', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
           const Spacer(),
-          _buildHeaderButton(icon: Icons.search, onPressed: () => context.push('/search')),
+          _buildHeaderButton(context, icon: Icons.search, onPressed: () => context.push('/search')),
           const SizedBox(width: 8),
-          _buildHeaderButton(icon: Icons.settings_outlined, onPressed: () => context.push('/settings')),
+          _buildHeaderButton(context, icon: Icons.settings_outlined, onPressed: () => context.push('/settings')),
         ],
       ),
     );
   }
 
-  Widget _buildSelectionHeader(BuildContext context, SelectionState state) {
+  Widget _buildSelectionHeader(BuildContext context, SelectionState state, List<dynamic> allItems) {
+    final theme = Theme.of(context);
     return AppBar(
-      backgroundColor: const Color(0xFF6C5CE7),
+      backgroundColor: theme.colorScheme.primary,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white),
+        icon: Icon(Icons.close, color: theme.colorScheme.onPrimary),
         onPressed: () => context.read<SelectionCubit>().clearSelection(),
       ),
       title: Text(
         '${state.selectedIds.length} item${state.selectedIds.length > 1 ? "s" : ""} selected',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: theme.colorScheme.onPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w500)),
       actions: [
         // Select all
         TextButton(
           onPressed: () {
-            context.read<SelectionCubit>().selectAll(
-              context.read<FoldersCubit>().state is FoldersLoadSuccess 
-                ? (context.read<FoldersCubit>().state as FoldersLoadSuccess).folders.cast<dynamic>() 
-                : [],
-              context.read<FilesCubit>().state is FilesLoadSuccess 
-                ? (context.read<FilesCubit>().state as FilesLoadSuccess).files.cast<dynamic>() 
-                : []
-            );
+            final visibleFolders = allItems.where((item) => item.runtimeType.toString().contains('Folder')).toList();
+            final visibleFiles = allItems.where((item) => !item.runtimeType.toString().contains('Folder')).toList();
+            context.read<SelectionCubit>().selectAll(visibleFolders, visibleFiles);
           },
-          child: const Text("Sab",
+          child: Text("All",
             style: TextStyle(
-              color: Colors.white70,
+              color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
               fontSize: 13))),
       ],
     );
@@ -206,9 +212,9 @@ class _HomeScreenView extends StatelessWidget {
   Widget _buildSelectionBottomBar(BuildContext context, SelectionState state, List<dynamic> allItems) {
     return Container(
       padding: EdgeInsets.fromLTRB(14, 10, 14, MediaQuery.of(context).padding.bottom + 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE0D9F5), width: 0.5))),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        border: Border(top: BorderSide(color: context.border, width: 0.5))),
       child: Row(children: [
         // Delete action
         Expanded(
@@ -255,11 +261,11 @@ class _HomeScreenView extends StatelessWidget {
                 ),
               );
             },
-            icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFC0392B)),
-            label: const Text("Delete", style: TextStyle(color: Color(0xFFC0392B))),
+            icon: Icon(Icons.delete_outline, size: 16, color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B)),
+            label: Text("Delete", style: TextStyle(color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B))),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              side: const BorderSide(color: Color(0xFFFFD5D5), width: 0.5),
+              side: BorderSide(color: context.isDark ? Colors.red.withValues(alpha: 0.3) : const Color(0xFFFFD5D5), width: 0.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
           ),
         ),
@@ -287,8 +293,8 @@ class _HomeScreenView extends StatelessWidget {
             icon: const Icon(Icons.drive_file_move_rounded, size: 16),
             label: const Text("Move"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C5CE7),
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -299,7 +305,8 @@ class _HomeScreenView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildHeaderButton(BuildContext context, {required IconData icon, required VoidCallback onPressed}) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(9),
@@ -307,10 +314,10 @@ class _HomeScreenView extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: const Color(0xFFEDE9F8),
+          color: theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(9),
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFF6C5CE7)),
+        child: Icon(icon, size: 18, color: theme.colorScheme.primary),
       ),
     );
   }

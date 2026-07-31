@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
@@ -10,7 +11,7 @@ class ExportService {
       final tempDir = await getTemporaryDirectory();
       final sanitizedTitle = file.title.replaceAll(RegExp(r'[^\w\s]+'), '').trim();
       final fileName = sanitizedTitle.isEmpty ? 'Untitled_Note' : sanitizedTitle;
-      final localFile = File('${tempDir.path}/${fileName}.txt');
+      final localFile = File('${tempDir.path}/$fileName.txt');
 
       final List<int> bom = [0xEF, 0xBB, 0xBF];
     String content = "${file.title}\n\n${file.description}";
@@ -24,7 +25,7 @@ class ExportService {
         XFile(localFile.path),
       ], text: 'Exporting text file from NotePilot');
     } catch (e) {
-      print('Export txt error: $e');
+      debugPrint('Export txt error: $e');
     }
   }
 
@@ -65,7 +66,7 @@ class ExportService {
 
       return localFile.path;
     } catch (e) {
-      print('Export docx error: $e');
+      debugPrint('Export docx error: $e');
       return null;
     }
   }
