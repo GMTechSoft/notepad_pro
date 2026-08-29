@@ -62,6 +62,7 @@ class FilesCubit extends Cubit<FilesState> {
   }
 
   Future<void> createFile({
+    String? id,
     String? folderId,
     required String title,
     required String description,
@@ -78,6 +79,7 @@ class FilesCubit extends Cubit<FilesState> {
   }) async {
     try {
       await _vaultRepository.createFile(
+        id: id,
         folderId: folderId,
         title: title,
         description: description,

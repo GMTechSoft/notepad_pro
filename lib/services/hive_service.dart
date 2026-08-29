@@ -113,6 +113,7 @@ class HiveService extends ChangeNotifier {
   }
 
   Future<void> updateFile(VaultFileModel fileModel) async {
+    debugPrint('HIVE WRITE (updateFile) - id: ${fileModel.id}, title: ${fileModel.title}, descLen: ${fileModel.description.length}, time: ${DateTime.now()}');
     await _fileBox.put(fileModel.id, fileModel);
     notifyListeners();
   }

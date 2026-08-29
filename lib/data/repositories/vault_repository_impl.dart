@@ -96,6 +96,7 @@ class VaultRepositoryImpl implements IVaultRepository {
 
   @override
   Future<VaultFile> createFile({
+    String? id,
     String? folderId,
     required String title,
     required String description,
@@ -111,7 +112,7 @@ class VaultRepositoryImpl implements IVaultRepository {
     int? lineNumber,
   }) async {
     final newFileEntity = VaultFile(
-      id: _uuid.v4(),
+      id: id ?? _uuid.v4(),
       folderId: folderId,
       title: title,
       description: description,

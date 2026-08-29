@@ -18,6 +18,7 @@ abstract class IVaultRepository {
 
   // Files operations contract context
   Future<VaultFile> createFile({
+    String? id,
     String? folderId,
     required String title,
     required String description,

@@ -104,11 +104,25 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
 
   /// Unified save method used by both auto‑save and manual save actions.
   Future<void> _performSecureSaveAndSync({required bool isManualSave}) async {
+    final saveSource = isManualSave ? 'MANUAL' : 'AUTO/LIFECYCLE';
+    debugPrint('SAVE_START - source: $saveSource, title: "${_titleController.text}", descLen: ${_descriptionController.text.length}');
+    
     // Do nothing if both title and description are empty.
-    if (_titleController.text.trim().isEmpty && _descriptionController.text.trim().isEmpty) return;
+    if (_titleController.text.trim().isEmpty && _descriptionController.text.trim().isEmpty) {
+      debugPrint('SAVE_ABORT - Both empty');
+      return;
+    }
 
-    // Guard against concurrent saves.
-    if (_isSaving) return;
+    // Wait for any ongoing save to finish before starting a new one (flush pending saves)
+    while (_isSaving) {
+      debugPrint('SAVE_WAITING - Waiting for ongoing save to finish...');
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
+    if (!mounted) {
+      debugPrint('SAVE_ABORT - Not mounted');
+      return;
+    }
     _isSaving = true;
 
     // Build the VaultFile instance with all current field values.
@@ -131,10 +145,13 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
       lineNumber: _addReference && _referenceType == ReferenceType.book ? int.tryParse(_lineCtrl.text) : null,
     );
 
+    debugPrint('SAVE_EXECUTE - id: ${finalFile.id}, title: "${finalFile.title}", descLen: ${finalFile.description.length}');
+
     try {
       if (widget.initialFile == null && !_hasCreatedAuto) {
         // New file – use createFile to insert into local DB.
         await context.read<FilesCubit>().createFile(
+          id: finalFile.id,
           folderId: widget.folderId,
           title: finalFile.title,
           description: finalFile.description,
@@ -150,9 +167,11 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
           lineNumber: finalFile.lineNumber,
         );
         _hasCreatedAuto = true; // mark creation done.
+        debugPrint('SAVE_SUCCESS - Created new file');
       } else {
         // Existing or already created file – update.
         await context.read<FilesCubit>().updateFile(finalFile);
+        debugPrint('SAVE_SUCCESS - Updated existing file');
       }
 
       // If auto‑sync is enabled and this is a manual save, trigger a single file upload to Google Drive.
@@ -167,6 +186,7 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
     } finally {
       // Reset saving guard.
       _isSaving = false;
+      debugPrint('SAVE_DONE - Finished');
       // If this was an explicit manual save, navigate back.
       if (isManualSave && mounted) {
         Navigator.of(context).pop();
@@ -174,13 +194,12 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
     }
   }
 
+  bool _canPop = false; // Add variable for PopScope
+
   @override
   void dispose() {
     // Dispose lifecycle listener
     _lifecycleListener.dispose();
-
-    // Force a final save to ensure all data is persisted and synced
-    _performSecureSaveAndSync(isManualSave: false);
 
     // Dispose controllers and focus nodes
     _titleController.dispose();
@@ -207,11 +226,14 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: _canPop,
       onPopInvokedWithResult: (didPop, dynamic result) async {
         if (didPop) return;
         await _performSecureSaveAndSync(isManualSave: false);
         if (mounted) {
+          setState(() {
+            _canPop = true;
+          });
           Navigator.of(this.context).pop(result);
         }
       },
@@ -406,7 +428,10 @@ class _CreateFileScreenState extends State<CreateFileScreen> {
         children: [
           _buildCircleButton(
             icon: Icons.arrow_back,
-            onPressed: () => context.pop(),
+            onPressed: () async {
+              await _performSecureSaveAndSync(isManualSave: false);
+              if (mounted) context.pop();
+            },
           ),
           const Spacer(),
           Text(

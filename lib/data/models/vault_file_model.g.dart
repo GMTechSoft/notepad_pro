@@ -19,9 +19,9 @@ class VaultFileModelAdapter extends TypeAdapter<VaultFileModel> {
     return VaultFileModel(
       id: fields[0] as String,
       folderId: fields[1] as String?,
-      title: fields[2] as String? ?? 'Untitled',
-      description: fields[3] as String? ?? '',
-      referenceType: fields[4] as ReferenceType? ?? ReferenceType.none,
+      title: fields[2] as String,
+      description: fields[3] as String,
+      referenceType: fields[4] as ReferenceType,
       videoTitle: fields[5] as String?,
       videoRefHours: fields[6] as int?,
       videoRefMinutes: fields[7] as int?,
@@ -31,10 +31,10 @@ class VaultFileModelAdapter extends TypeAdapter<VaultFileModel> {
       volume: fields[11] as String?,
       pageNumber: fields[12] as int?,
       lineNumber: fields[13] as int?,
-      createdAt: fields[14] as DateTime? ?? DateTime.now(),
-      lastModified: fields[15] as DateTime? ?? DateTime.now(),
+      createdAt: fields[14] as DateTime,
+      lastModified: fields[15] as DateTime,
       driveFileId: fields[17] as String?,
-      isSynced: fields[18] as bool? ?? false,
+      isSynced: fields[18] as bool,
     );
   }
 
