@@ -9,35 +9,14 @@ import 'package:notepad_pro/presentation/blocs/folders/folders_state.dart';
 import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
+import '../../../core/utils/deletion_utils.dart';
 
 class FolderCard extends StatelessWidget {
   final Folder folder;
   const FolderCard({super.key, required this.folder});
 
   void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Folder?'),
-        content: const Text('Are you sure you want to delete this folder? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await context.read<FoldersCubit>().deleteFolder(folder.id);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    DeletionUtils.showUnifiedDeleteDialog(context, items: [folder]);
   }
 
   Future<void> _showEditDialog(BuildContext context) async {

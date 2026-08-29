@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
 import 'package:notepad_pro/data/models/folder_model.dart';
 import 'package:notepad_pro/data/models/vault_file_model.dart' hide ReferenceType;
 import 'package:notepad_pro/data/repositories/vault_repository_interface.dart';
@@ -111,8 +112,17 @@ class VaultRepositoryImpl implements IVaultRepository {
     int? pageNumber,
     int? lineNumber,
   }) async {
+    final actualId = id ?? _uuid.v4();
+    final configBox = Hive.box('notes_settings');
+    final deletedIds = List<String>.from(configBox.get('deleted_local_ids', defaultValue: []) ?? []);
+    if (deletedIds.contains(actualId)) {
+      debugPrint('[VaultRepository] Aborting create for deleted file: $actualId');
+      // Return a dummy to satisfy return type, it won't be saved
+      return VaultFile(id: actualId, title: '', description: '', createdAt: DateTime.now(), updatedAt: DateTime.now());
+    }
+
     final newFileEntity = VaultFile(
-      id: id ?? _uuid.v4(),
+      id: actualId,
       folderId: folderId,
       title: title,
       description: description,
@@ -137,6 +147,13 @@ class VaultRepositoryImpl implements IVaultRepository {
 
   @override
   Future<void> updateFile(VaultFile file) async {
+    final configBox = Hive.box('notes_settings');
+    final deletedIds = List<String>.from(configBox.get('deleted_local_ids', defaultValue: []) ?? []);
+    if (deletedIds.contains(file.id)) {
+      debugPrint('[VaultRepository] Aborting update for deleted file: ${file.id}');
+      return;
+    }
+
     final fileModel = VaultFileModel.fromEntity(file.copyWith(isSynced: false));
     await _hiveService.updateFile(fileModel);
   }

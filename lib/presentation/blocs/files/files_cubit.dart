@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/data/repositories/vault_repository_interface.dart';
 import 'package:notepad_pro/presentation/blocs/sync/sync_cubit.dart';
@@ -112,13 +113,57 @@ class FilesCubit extends Cubit<FilesState> {
     }
   }
 
-  Future<void> deleteFile(String id) async {
+  Future<bool?> deleteFile(String id, {bool deleteFromCloud = false}) async {
     try {
+      // 1. Invalidate any ongoing save/upload for this note to prevent resurrecting
+      final configBox = Hive.box('notes_settings');
+      final deletedIds = List<String>.from(configBox.get('deleted_local_ids', defaultValue: []) ?? []);
+      if (!deletedIds.contains(id)) {
+        deletedIds.add(id);
+        await configBox.put('deleted_local_ids', deletedIds);
+      }
+
+      String? cloudFileId;
+      if (deleteFromCloud) {
+        try {
+          final allFiles = await _vaultRepository.getAllFiles();
+          cloudFileId = allFiles.firstWhere((f) => f.id == id).driveFileId;
+        } catch (_) {}
+      }
+
+      // 2. Delete locally
       await _vaultRepository.deleteFile(id);
       await loadFiles();
+      
+      bool? cloudSuccess;
+
+      if (deleteFromCloud) {
+        if (cloudFileId == null || cloudFileId.isEmpty) {
+          // File was never synced, so it's already "deleted" from cloud
+          cloudSuccess = true;
+        } else {
+          // Add to pending
+          final pending = List<String>.from(configBox.get('pending_cloud_deletions', defaultValue: []) ?? []);
+          if (!pending.contains(cloudFileId)) {
+            pending.add(cloudFileId);
+            await configBox.put('pending_cloud_deletions', pending);
+          }
+
+          // Try fast delete
+          try {
+            await _syncCubit.deleteFileFromCloud(cloudFileId: cloudFileId);
+            cloudSuccess = true;
+          } catch (e) {
+            cloudSuccess = false;
+          }
+        }
+      }
+
       _syncCubit.performAutoSync();
+      return cloudSuccess;
     } catch (e) {
       emit(FilesLoadFailure(e.toString()));
+      return null;
     }
   }
 

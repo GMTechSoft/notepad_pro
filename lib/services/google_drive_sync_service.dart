@@ -85,6 +85,63 @@ class GoogleDriveSyncService {
   }
 
   // ===========================================================================
+  // Cloud Deletion
+  // ===========================================================================
+
+  Future<void> deleteFileFromCloud({
+    required String cloudFileId,
+  }) async {
+    try {
+      final driveApi = await _getDriveApi();
+      if (driveApi == null) return;
+
+      await driveApi.files.delete(cloudFileId);
+      
+      final pending = List<String>.from(_hiveService.appSettingsBox.get('pending_cloud_deletions', defaultValue: []) ?? []);
+      pending.remove(cloudFileId);
+      await _hiveService.appSettingsBox.put('pending_cloud_deletions', pending);
+    } catch (e) {
+      debugPrint('[DriveSync] Fast delete failed for $cloudFileId: $e');
+      if (e.toString().contains('404')) {
+        final pending = List<String>.from(_hiveService.appSettingsBox.get('pending_cloud_deletions', defaultValue: []) ?? []);
+        pending.remove(cloudFileId);
+        await _hiveService.appSettingsBox.put('pending_cloud_deletions', pending);
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> processPendingCloudDeletions() async {
+    try {
+      final pending = List<String>.from(_hiveService.appSettingsBox.get('pending_cloud_deletions', defaultValue: []) ?? []);
+      if (pending.isEmpty) return;
+
+      final driveApi = await _getDriveApi();
+      if (driveApi == null) return;
+
+      List<String> successfullyDeleted = [];
+
+      for (final cloudFileId in pending) {
+        try {
+          await driveApi.files.delete(cloudFileId);
+          successfullyDeleted.add(cloudFileId);
+        } catch (e) {
+          debugPrint('[DriveSync] Pending delete failed for $cloudFileId: $e');
+          if (e.toString().contains('404')) {
+            successfullyDeleted.add(cloudFileId);
+          }
+        }
+      }
+
+      pending.removeWhere((item) => successfullyDeleted.contains(item));
+      await _hiveService.appSettingsBox.put('pending_cloud_deletions', pending);
+    } catch (e) {
+      debugPrint('[DriveSync] processPendingCloudDeletions error: $e');
+    }
+  }
+
+  // ===========================================================================
   // 1. Recursive Backup Engine
   // ===========================================================================
 
@@ -181,9 +238,17 @@ class GoogleDriveSyncService {
         final String driveId = await _moveAndUpdateJsonFile(driveApi, fileName, jsonMap, parentDriveId, existingFileId);
 
         if (type == 'note') {
-          await _hiveService.updateNote((data as NoteModel).copyWith(driveFileId: driveId, isSynced: true));
+          final noteId = (data as NoteModel).id;
+          final latestNote = _hiveService.noteBox.get(noteId);
+          if (latestNote != null) {
+            await _hiveService.updateNote(latestNote.copyWith(driveFileId: driveId, isSynced: true));
+          }
         } else {
-          await _hiveService.updateFile((data as VaultFileModel).copyWith(driveFileId: driveId, isSynced: true));
+          final fileId = (data as VaultFileModel).id;
+          final latestFile = _hiveService.fileBox.get(fileId);
+          if (latestFile != null) {
+            await _hiveService.updateFile(latestFile.copyWith(driveFileId: driveId, isSynced: true));
+          }
         }
 
         _progressController.add(0.3 + (0.7 * (i + 1) / (allItems.isEmpty ? 1 : allItems.length)));
@@ -192,6 +257,8 @@ class GoogleDriveSyncService {
       // Force Cubits state reload after new item insertion/sync to avoid local reference Gray Screen crashes
       sl<FoldersCubit>().loadFolders();
       sl<FilesCubit>().loadFiles();
+
+      await processPendingCloudDeletions();
 
       _progressController.add(1.0);
       debugPrint('[DriveSync] Backup completed successfully.');

@@ -14,6 +14,7 @@ import 'package:notepad_pro/presentation/widgets/create_folder_dialog.dart';
 import 'package:notepad_pro/domain/entities/vault_file.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 import 'package:notepad_pro/core/theme/theme_extensions.dart';
+import 'package:notepad_pro/core/utils/deletion_utils.dart';
 
 import '../../blocs/files/files_cubit.dart';
 
@@ -479,39 +480,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
 
               if (selectedItems.isEmpty) return;
 
-              showDialog(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Delete Selected Items?'),
-                  content: Text('Are you sure you want to delete ${selectedItems.length} item(s)? This action cannot be undone.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        Navigator.pop(dialogContext);
-                        for (final item in selectedItems) {
-                          final typeStr = item.runtimeType.toString();
-                          if (typeStr.contains('Folder')) {
-                            await context.read<FoldersCubit>().deleteFolder((item as dynamic).id);
-                          } else if (typeStr.contains('VaultFile')) {
-                            await context.read<FilesCubit>().deleteFile((item as dynamic).id);
-                          }
-                        }
-                        if (context.mounted) {
-                          context.read<SelectionCubit>().clearSelection();
-                          context.read<FoldersCubit>().loadFolders();
-                          context.read<FilesCubit>().loadFiles();
-                        }
-                      },
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
+              DeletionUtils.showUnifiedDeleteDialog(context, items: selectedItems);
             },
             icon: Icon(Icons.delete_outline, size: 16, color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B)),
             label: Text("Delete", style: TextStyle(color: context.isDark ? const Color(0xFFEF9A9A) : const Color(0xFFC0392B))),

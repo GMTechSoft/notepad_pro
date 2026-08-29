@@ -6,35 +6,14 @@ import 'package:notepad_pro/presentation/blocs/files/files_cubit.dart';
 import 'package:notepad_pro/presentation/blocs/selection/selection_cubit.dart';
 
 import '../../../core/utils/date_formatter.dart';
+import '../../../core/utils/deletion_utils.dart';
 
 class FileCard extends StatelessWidget {
   final VaultFile file;
   const FileCard({super.key, required this.file});
 
   void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete File?'),
-        content: const Text('Are you sure you want to delete this file? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await context.read<FilesCubit>().deleteFile(file.id);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    DeletionUtils.showUnifiedDeleteDialog(context, items: [file]);
   }
 
   @override

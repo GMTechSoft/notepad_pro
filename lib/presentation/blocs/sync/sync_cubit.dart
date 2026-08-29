@@ -420,6 +420,10 @@ class SyncCubit extends Cubit<SyncState> {
     emit(state.copyWith(offlineSync: value));
   }
 
+  Future<void> deleteFileFromCloud({required String cloudFileId}) async {
+    await _syncService.deleteFileFromCloud(cloudFileId: cloudFileId);
+  }
+
   void simulatePending() {
     emit(state.copyWith(
       status: SyncStatus.pending,
